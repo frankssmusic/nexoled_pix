@@ -180,7 +180,7 @@ function ViewAsistente({ evento }) {
             <h2 style={{ fontFamily: "Rajdhani", fontWeight: 700, fontSize: 20, marginBottom: 6, letterSpacing: 1 }}>Comparte tu momento</h2>
             <p style={{ color: "#5a5f85", fontSize: 13, marginBottom: 20, lineHeight: 1.5 }}>Tu foto aparecerá en la pantalla LED tras ser aprobada.</p>
             <div className="totem-wrap">
-              <div className="totem-screen" onClick={() => fileRef.current.click()}>
+              <div className="totem-screen">
                 <input ref={fileRef} type="file" accept="image/*" onChange={e => handleFile(e.target.files[0])} />
                 <div className="totem-inner">
                   <div className="totem-icon">📸</div>
