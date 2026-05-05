@@ -57,8 +57,6 @@ const css = `
   .totem-screen::before, .totem-screen::after { content: ''; position: absolute; width: 5px; height: 5px; border-radius: 50%; background: #00f5ff; box-shadow: 0 0 6px #00f5ff; z-index: 3; }
   .totem-screen::before { top: 5px; left: 5px; }
   .totem-screen::after { top: 5px; right: 5px; }
-  .totem-screen-2 { width: 75px; aspect-ratio: 0.4 / 1; border-radius: 5px; border: 1px solid #ff00aa44; box-shadow: 0 0 12px #ff00aa22; background: linear-gradient(180deg, #150820, #1a0d28); display: flex; align-items: center; justify-content: center; opacity: 0.55; flex-shrink: 0; }
-  .totem-screen-2-text { font-family: 'Orbitron'; font-size: 7px; color: #ff00aa99; letter-spacing: 1px; writing-mode: vertical-rl; }
   .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
   .photo-card { border-radius: 10px; overflow: hidden; border: 2px solid #1a1d35; cursor: pointer; transition: all 0.2s; position: relative; background: #060810; }
   .photo-card:hover { border-color: #00f5ff55; transform: translateY(-3px); box-shadow: 0 8px 24px #00f5ff18; }
@@ -88,7 +86,7 @@ const css = `
   .filter-tab.active { background: #00f5ff18; border-color: #00f5ff; color: #00f5ff; }
   ::-webkit-scrollbar { width: 3px; }
   ::-webkit-scrollbar-thumb { background: #1a1d35; border-radius: 2px; }
-  @media (max-width: 480px) { .nav-btn { padding: 4px 8px; font-size: 10px; } .card { padding: 16px; } .stat-val { font-size: 20px; } .evento-nombre { font-size: 15px; } .totem-screen { width: 90px; } .totem-screen-2 { width: 62px; } .photo-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); } }
+  @media (max-width: 480px) { .nav-btn { padding: 4px 8px; font-size: 10px; } .card { padding: 16px; } .stat-val { font-size: 20px; } .evento-nombre { font-size: 15px; } .totem-screen { width: 90px; } .photo-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); } }
 `;
 
 function BokehBg() {
@@ -158,6 +156,22 @@ function ViewAsistente({ evento }) {
 
   const reset = () => { setStep("upload"); setPreview(null); setFile(null); };
 
+  const NexoledBanner = () => (
+    <a href="https://nexoled.vercel.app" target="_blank" rel="noreferrer" style={{ textDecoration: "none", display: "block", marginTop: 24 }}>
+      <div style={{ padding: "16px", background: "#131628", border: "1px solid #ff00aa33", borderRadius: 12, textAlign: "center", cursor: "pointer" }}>
+        <div style={{ fontSize: 13, fontFamily: "Rajdhani", fontWeight: 700, color: "#e8eaf6", marginBottom: 6 }}>
+          ¿Quieres proyectar tus momentos en tu evento?
+        </div>
+        <div style={{ fontSize: 12, color: "#5a5f85", fontFamily: "Inter", marginBottom: 10, lineHeight: 1.5 }}>
+          Visita nuestros servicios y contáctanos para personalizar tu fiesta 🎉
+        </div>
+        <div style={{ display: "inline-block", padding: "6px 16px", background: "linear-gradient(135deg, #ff00aa, #aa0066)", borderRadius: 20, fontSize: 11, fontFamily: "Rajdhani", fontWeight: 700, color: "#fff", letterSpacing: 1 }}>
+          VISITAR NEXOLED →
+        </div>
+      </div>
+    </a>
+  );
+
   if (!evento) return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div style={{ textAlign: "center", color: "#5a5f85" }}>
@@ -175,58 +189,54 @@ function ViewAsistente({ evento }) {
       </div>
       <div style={{ width: "100%", maxWidth: 420 }}>
         {step === "upload" && (
-          <div className="card" style={{ animation: "fadeInUp 0.4s ease" }}>
-            <div className="tag">EVENTO ACTIVO</div>
-            <h2 style={{ fontFamily: "Rajdhani", fontWeight: 700, fontSize: 20, marginBottom: 6, letterSpacing: 1 }}>Comparte tu momento</h2>
-            <p style={{ color: "#5a5f85", fontSize: 13, marginBottom: 20, lineHeight: 1.5 }}>Tu foto aparecerá en la pantalla LED tras ser aprobada.</p>
-            <div className="totem-wrap">
-              <div className="totem-screen">
-                <input ref={fileRef} type="file" accept="image/*" onChange={e => handleFile(e.target.files[0])} />
-                <div className="totem-inner">
-                  <div className="totem-icon">📸</div>
-                  <div className="totem-text">SUBIR FOTO</div>
-                  <div className="totem-sub">JPG · PNG · HEIC</div>
+          <div style={{ animation: "fadeInUp 0.4s ease" }}>
+            <div className="card">
+              <div className="tag">EVENTO ACTIVO</div>
+              <h2 style={{ fontFamily: "Rajdhani", fontWeight: 700, fontSize: 20, marginBottom: 6, letterSpacing: 1 }}>Comparte tu momento</h2>
+              <p style={{ color: "#5a5f85", fontSize: 13, marginBottom: 20, lineHeight: 1.5 }}>Tu foto aparecerá en la pantalla LED tras ser aprobada.</p>
+              <div className="totem-wrap">
+                <div className="totem-screen">
+                  <input ref={fileRef} type="file" accept="image/*" onChange={e => handleFile(e.target.files[0])} />
+                  <div className="totem-inner">
+                    <div className="totem-icon">📸</div>
+                    <div className="totem-text">SUBIR FOTO</div>
+                    <div className="totem-sub">JPG · PNG · HEIC</div>
+                  </div>
+                </div>
+                <div style={{ width: 75, display: "flex", alignItems: "flex-end", justifyContent: "center", flexShrink: 0 }}>
+                  <img src="/nexoled_logo.png" alt="NexoLED" style={{ width: "100%", borderRadius: 8 }} />
                 </div>
               </div>
-                <div style={{ width: 75, display: "flex", alignItems: "flex-end", justifyContent: "center", flexShrink: 0 }}>
-                <img src="/nexoled_logo.png" alt="NexoLED" style={{ width: "100%", borderRadius: 8 }} />
-              </div>
             </div>
+            <NexoledBanner />
           </div>
         )}
         {step === "preview" && (
-          <div className="card" style={{ animation: "fadeInUp 0.4s ease" }}>
-            <div className="tag">PREVISUALIZACIÓN</div>
-            <h2 style={{ fontFamily: "Rajdhani", fontWeight: 700, fontSize: 20, marginBottom: 14 }}>¿Lista para enviar?</h2>
-            <img src={preview} alt="" style={{ width: "100%", borderRadius: 10, aspectRatio: "4/3", objectFit: "cover", marginBottom: 16, border: "1px solid #1a1d35" }} />
-            <div style={{ display: "flex", gap: 10 }}>
-              <button className="btn btn-outline" style={{ flex: 1 }} onClick={reset} disabled={loading}>Cambiar</button>
-              <button className="btn btn-cyan" style={{ flex: 1 }} onClick={handleSend} disabled={loading}>{loading ? "Enviando..." : "Enviar ✨"}</button>
+          <div style={{ animation: "fadeInUp 0.4s ease" }}>
+            <div className="card">
+              <div className="tag">PREVISUALIZACIÓN</div>
+              <h2 style={{ fontFamily: "Rajdhani", fontWeight: 700, fontSize: 20, marginBottom: 14 }}>¿Lista para enviar?</h2>
+              <img src={preview} alt="" style={{ width: "100%", borderRadius: 10, aspectRatio: "4/3", objectFit: "cover", marginBottom: 16, border: "1px solid #1a1d35" }} />
+              <div style={{ display: "flex", gap: 10 }}>
+                <button className="btn btn-outline" style={{ flex: 1 }} onClick={reset} disabled={loading}>Cambiar</button>
+                <button className="btn btn-cyan" style={{ flex: 1 }} onClick={handleSend} disabled={loading}>{loading ? "Enviando..." : "Enviar ✨"}</button>
+              </div>
             </div>
+            <NexoledBanner />
           </div>
         )}
         {step === "sent" && (
-          <div className="card" style={{ textAlign: "center", animation: "fadeInUp 0.4s ease" }}>
-            <div style={{ fontSize: 60, marginBottom: 16 }}>🎉</div>
-            <div className="tag">ENVIADA</div>
-            <h2 style={{ fontFamily: "Orbitron", fontSize: 18, fontWeight: 700, marginBottom: 10 }}>¡Foto en camino!</h2>
-            <p style={{ color: "#5a5f85", fontSize: 13, marginBottom: 24, lineHeight: 1.6 }}>El operador revisará tu foto. Si es aprobada, aparecerá en la pantalla LED.</p>
-            <button className="btn btn-outline" style={{ width: "100%" }} onClick={reset}>Enviar otra foto</button>
+          <div style={{ animation: "fadeInUp 0.4s ease" }}>
+            <div className="card" style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 60, marginBottom: 16 }}>🎉</div>
+              <div className="tag">ENVIADA</div>
+              <h2 style={{ fontFamily: "Orbitron", fontSize: 18, fontWeight: 700, marginBottom: 10 }}>¡Foto en camino!</h2>
+              <p style={{ color: "#5a5f85", fontSize: 13, marginBottom: 24, lineHeight: 1.6 }}>El operador revisará tu foto. Si es aprobada, aparecerá en la pantalla LED.</p>
+              <button className="btn btn-outline" style={{ width: "100%" }} onClick={reset}>Enviar otra foto</button>
+            </div>
+            <NexoledBanner />
           </div>
         )}
-        <a href="https://nexoled.vercel.app" target="_blank" rel="noreferrer" style={{ textDecoration: "none" }}>
-  <div style={{ marginTop: 24, padding: "16px", background: "#131628", border: "1px solid #ff00aa33", borderRadius: 12, textAlign: "center", cursor: "pointer" }}>
-    <div style={{ fontSize: 13, fontFamily: "Rajdhani", fontWeight: 700, color: "#e8eaf6", marginBottom: 6 }}>
-      ¿Quieres proyectar tus momentos en tu evento?
-    </div>
-    <div style={{ fontSize: 12, color: "#5a5f85", fontFamily: "Inter", marginBottom: 10, lineHeight: 1.5 }}>
-      Visita nuestros servicios y contáctanos para personalizar tu fiesta 🎉
-    </div>
-    <div style={{ display: "inline-block", padding: "6px 16px", background: "linear-gradient(135deg, #ff00aa, #aa0066)", borderRadius: 20, fontSize: 11, fontFamily: "Rajdhani", fontWeight: 700, color: "#fff", letterSpacing: 1 }}>
-      VISITAR NEXOLED →
-    </div>
-  </div>
-</a>
       </div>
     </div>
   );
@@ -389,13 +399,14 @@ function ViewAdmin({ evento, fotos, onRefresh }) {
   const [toast, setToast] = useState(null);
   const [eventName, setEventName] = useState("");
   const [opPass, setOpPass] = useState("");
-// eslint-disable-next-line react-hooks/exhaustive-deps
-useEffect(() => {
-  if (evento && eventName === "") {
-    setEventName(evento.nombre);
-    setOpPass(evento.clave_operador);
-  }
-}, [evento]);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (evento && eventName === "") {
+      setEventName(evento.nombre);
+      setOpPass(evento.clave_operador);
+    }
+  }, [evento]);
 
   const handleSave = async () => {
     if (!evento) return;
