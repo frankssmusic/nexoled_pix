@@ -389,7 +389,12 @@ function ViewAdmin({ evento, fotos, onRefresh }) {
   const [toast, setToast] = useState(null);
   const [eventName, setEventName] = useState("");
   const [opPass, setOpPass] = useState("");
-  useEffect(() => { if (evento) { setEventName(evento.nombre); setOpPass(evento.clave_operador); } }, [evento]);
+  useEffect(() => {
+  if (evento && eventName === "") {
+    setEventName(evento.nombre);
+    setOpPass(evento.clave_operador);
+  }
+}, [evento]);
 
   const handleSave = async () => {
     if (!evento) return;
