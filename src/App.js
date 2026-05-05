@@ -214,7 +214,19 @@ function ViewAsistente({ evento }) {
             <button className="btn btn-outline" style={{ width: "100%" }} onClick={reset}>Enviar otra foto</button>
           </div>
         )}
-        <div style={{ textAlign: "center", marginTop: 24, color: "#5a5f85", fontSize: 10, fontFamily: "Orbitron", letterSpacing: 2 }}>POWERED BY NEXOLED · PUNTA ARENAS</div>
+        <a href="https://nexoled.vercel.app" target="_blank" rel="noreferrer" style={{ textDecoration: "none" }}>
+  <div style={{ marginTop: 24, padding: "16px", background: "#131628", border: "1px solid #ff00aa33", borderRadius: 12, textAlign: "center", cursor: "pointer" }}>
+    <div style={{ fontSize: 13, fontFamily: "Rajdhani", fontWeight: 700, color: "#e8eaf6", marginBottom: 6 }}>
+      ¿Quieres proyectar tus momentos en tu evento?
+    </div>
+    <div style={{ fontSize: 12, color: "#5a5f85", fontFamily: "Inter", marginBottom: 10, lineHeight: 1.5 }}>
+      Visita nuestros servicios y contáctanos para personalizar tu fiesta 🎉
+    </div>
+    <div style={{ display: "inline-block", padding: "6px 16px", background: "linear-gradient(135deg, #ff00aa, #aa0066)", borderRadius: 20, fontSize: 11, fontFamily: "Rajdhani", fontWeight: 700, color: "#fff", letterSpacing: 1 }}>
+      VISITAR NEXOLED →
+    </div>
+  </div>
+</a>
       </div>
     </div>
   );
