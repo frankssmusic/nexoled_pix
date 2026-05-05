@@ -389,7 +389,8 @@ function ViewAdmin({ evento, fotos, onRefresh }) {
   const [toast, setToast] = useState(null);
   const [eventName, setEventName] = useState("");
   const [opPass, setOpPass] = useState("");
-  useEffect(() => {
+// eslint-disable-next-line react-hooks/exhaustive-deps
+useEffect(() => {
   if (evento && eventName === "") {
     setEventName(evento.nombre);
     setOpPass(evento.clave_operador);
