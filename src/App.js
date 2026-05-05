@@ -534,7 +534,7 @@ export default function App() {
         </nav>
         {view === "asistente" && <ViewAsistente evento={evento} />}
         {view === "operador" && <ViewOperador evento={evento} fotos={fotos} onRefresh={fetchData} />}
-        {view === "admin" && <ViewAdmin evento={evento} fotos={fotos} onRefresh={fetchData} />}
+        {view === "admin" && <ViewAdmin key={evento?.nombre} evento={evento} fotos={fotos} onRefresh={fetchData} />}
       </div>
     </>
   );
