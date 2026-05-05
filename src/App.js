@@ -3,25 +3,6 @@ import { supabase } from "./supabase";
 
 const ADMIN_PASSWORD = "admin9999";
 
-const G = {
-  bg: "#060810",
-  surface: "#0d0f1a",
-  surfaceHigh: "#131628",
-  border: "#1a1d35",
-  borderBright: "#252850",
-  cyan: "#00f5ff",
-  cyanBright: "#60ffff",
-  magenta: "#ff00aa",
-  magentaBright: "#ff60cc",
-  cyanDim: "#00f5ff18",
-  cyanGlow: "#00f5ff44",
-  magentaDim: "#ff00aa18",
-  magentaGlow: "#ff00aa44",
-  text: "#e8eaf6",
-  muted: "#5a5f85",
-  mutedBright: "#8890c0",
-};
-
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500&display=swap');
 
