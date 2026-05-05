@@ -159,15 +159,9 @@ function ViewAsistente({ evento }) {
   const NexoledBanner = () => (
     <a href="https://nexoled.vercel.app" target="_blank" rel="noreferrer" style={{ textDecoration: "none", display: "block", marginTop: 24 }}>
       <div style={{ padding: "16px", background: "#131628", border: "1px solid #ff00aa33", borderRadius: 12, textAlign: "center", cursor: "pointer" }}>
-        <div style={{ fontSize: 13, fontFamily: "Rajdhani", fontWeight: 700, color: "#e8eaf6", marginBottom: 6 }}>
-          ¿Quieres proyectar tus momentos en tu evento?
-        </div>
-        <div style={{ fontSize: 12, color: "#5a5f85", fontFamily: "Inter", marginBottom: 10, lineHeight: 1.5 }}>
-          Visita nuestros servicios y contáctanos para personalizar tu fiesta 🎉
-        </div>
-        <div style={{ display: "inline-block", padding: "6px 16px", background: "linear-gradient(135deg, #ff00aa, #aa0066)", borderRadius: 20, fontSize: 11, fontFamily: "Rajdhani", fontWeight: 700, color: "#fff", letterSpacing: 1 }}>
-          VISITAR NEXOLED →
-        </div>
+        <div style={{ fontSize: 13, fontFamily: "Rajdhani", fontWeight: 700, color: "#e8eaf6", marginBottom: 6 }}>¿Quieres proyectar tus momentos en tu evento?</div>
+        <div style={{ fontSize: 12, color: "#5a5f85", fontFamily: "Inter", marginBottom: 10, lineHeight: 1.5 }}>Visita nuestros servicios y contáctanos para personalizar tu fiesta 🎉</div>
+        <div style={{ display: "inline-block", padding: "6px 16px", background: "linear-gradient(135deg, #ff00aa, #aa0066)", borderRadius: 20, fontSize: 11, fontFamily: "Rajdhani", fontWeight: 700, color: "#fff", letterSpacing: 1 }}>VISITAR NEXOLED →</div>
       </div>
     </a>
   );
@@ -341,9 +335,7 @@ function ViewOperador({ evento, fotos, onRefresh }) {
                   </div>
                 )}
                 {(filter === "approved" || filter === "rejected") && (
-                  <button className="btn btn-sm btn-warning" style={{ width: "100%", marginTop: 7, padding: "6px", fontSize: 11 }} onClick={e => { e.stopPropagation(); updateStatus([photo.id], "pending"); setToast("↩️ Enviada a revisión"); }}>
-                    ↩ Revertir
-                  </button>
+                  <button className="btn btn-sm btn-warning" style={{ width: "100%", marginTop: 7, padding: "6px", fontSize: 11 }} onClick={e => { e.stopPropagation(); updateStatus([photo.id], "pending"); setToast("↩️ Enviada a revisión"); }}>↩ Revertir</button>
                 )}
               </div>
             </div>
@@ -392,21 +384,31 @@ function ViewPantalla({ fotos, onExit }) {
   );
 }
 
+// Admin usa campos controlados directamente desde evento prop — sin useState local para nombre/clave
 function ViewAdmin({ evento, fotos, onRefresh }) {
   const [loggedIn, setLoggedIn] = useState(false);
   const [pass, setPass] = useState("");
   const [error, setError] = useState("");
   const [toast, setToast] = useState(null);
-  const [eventName, setEventName] = useState(evento?.nombre || "");
-  const [opPass, setOpPass] = useState(evento?.clave_operador || "");
-  
- const handleSave = async () => {
-  if (!evento) return;
-  console.log("Guardando:", evento.id, eventName, opPass);
-  const { error } = await supabase.from("eventos").update({ nombre: eventName, clave_operador: opPass }).eq("id", evento.id);
-  console.log("Error:", error);
-  setToast("✅ Configuración guardada"); onRefresh();
-};
+  const [editNombre, setEditNombre] = useState("");
+  const [editClave, setEditClave] = useState("");
+  const [initialized, setInitialized] = useState(false);
+
+  useEffect(() => {
+    if (evento && !initialized) {
+      setEditNombre(evento.nombre);
+      setEditClave(evento.clave_operador);
+      setInitialized(true);
+    }
+  }, [evento, initialized]);
+
+  const handleSave = async () => {
+    if (!evento) return;
+    await supabase.from("eventos").update({ nombre: editNombre, clave_operador: editClave }).eq("id", evento.id);
+    setToast("✅ Configuración guardada");
+    setInitialized(false); // fuerza re-sync con datos frescos
+    await onRefresh();
+  };
 
   const handleClear = async () => {
     if (!evento || !window.confirm("¿Borrar todas las fotos del evento?")) return;
@@ -441,8 +443,8 @@ function ViewAdmin({ evento, fotos, onRefresh }) {
       <div className="card" style={{ marginBottom: 14 }}>
         <h3 style={{ fontFamily: "Rajdhani", fontWeight: 700, fontSize: 16, marginBottom: 16, letterSpacing: 1 }}>⚙️ Configuración del evento</h3>
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <div><label style={{ fontSize: 11, color: "#5a5f85", display: "block", marginBottom: 6, fontFamily: "Orbitron", letterSpacing: 1 }}>Nombre del evento</label><input className="input" value={eventName} onChange={e => setEventName(e.target.value)} placeholder="Ej: Boda de Javier y Paola" /></div>
-          <div><label style={{ fontSize: 11, color: "#5a5f85", display: "block", marginBottom: 6, fontFamily: "Orbitron", letterSpacing: 1 }}>Clave del operador</label><input className="input" value={opPass} onChange={e => setOpPass(e.target.value)} /></div>
+          <div><label style={{ fontSize: 11, color: "#5a5f85", display: "block", marginBottom: 6, fontFamily: "Orbitron", letterSpacing: 1 }}>Nombre del evento</label><input className="input" value={editNombre} onChange={e => setEditNombre(e.target.value)} placeholder="Ej: Boda de Javier y Paola" /></div>
+          <div><label style={{ fontSize: 11, color: "#5a5f85", display: "block", marginBottom: 6, fontFamily: "Orbitron", letterSpacing: 1 }}>Clave del operador</label><input className="input" value={editClave} onChange={e => setEditClave(e.target.value)} /></div>
           <button className="btn btn-cyan btn-sm" onClick={handleSave}>Guardar configuración</button>
         </div>
       </div>
@@ -460,7 +462,7 @@ function ViewAdmin({ evento, fotos, onRefresh }) {
         <div style={{ marginTop: 14, padding: 12, background: "#060810", borderRadius: 8, fontSize: 11, color: "#5a5f85", lineHeight: 1.8 }}>
           <strong style={{ color: "#e8eaf6", fontFamily: "Rajdhani" }}>Acceso rápido</strong><br />
           URL: <span style={{ color: "#00f5ff", fontFamily: "Orbitron", fontSize: 10 }}>nexoledpix.vercel.app</span><br />
-          Clave operador: <span style={{ color: "#ff00aa", fontFamily: "Orbitron", fontSize: 10 }}>{opPass}</span>
+          Clave operador: <span style={{ color: "#ff00aa", fontFamily: "Orbitron", fontSize: 10 }}>{editClave}</span>
         </div>
       </div>
     </div>
@@ -534,7 +536,7 @@ export default function App() {
         </nav>
         {view === "asistente" && <ViewAsistente evento={evento} />}
         {view === "operador" && <ViewOperador evento={evento} fotos={fotos} onRefresh={fetchData} />}
-        {view === "admin" && <ViewAdmin key={evento?.nombre} evento={evento} fotos={fotos} onRefresh={fetchData} />}
+        {view === "admin" && <ViewAdmin evento={evento} fotos={fotos} onRefresh={fetchData} />}
       </div>
     </>
   );
