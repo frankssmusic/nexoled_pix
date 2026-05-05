@@ -400,11 +400,13 @@ function ViewAdmin({ evento, fotos, onRefresh }) {
   const [eventName, setEventName] = useState(evento?.nombre || "");
   const [opPass, setOpPass] = useState(evento?.clave_operador || "");
   
-  const handleSave = async () => {
-    if (!evento) return;
-    await supabase.from("eventos").update({ nombre: eventName, clave_operador: opPass }).eq("id", evento.id);
-    setToast("✅ Configuración guardada"); onRefresh();
-  };
+ const handleSave = async () => {
+  if (!evento) return;
+  console.log("Guardando:", evento.id, eventName, opPass);
+  const { error } = await supabase.from("eventos").update({ nombre: eventName, clave_operador: opPass }).eq("id", evento.id);
+  console.log("Error:", error);
+  setToast("✅ Configuración guardada"); onRefresh();
+};
 
   const handleClear = async () => {
     if (!evento || !window.confirm("¿Borrar todas las fotos del evento?")) return;
