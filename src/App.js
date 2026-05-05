@@ -188,8 +188,8 @@ function ViewAsistente({ evento }) {
                   <div className="totem-sub">JPG · PNG · HEIC</div>
                 </div>
               </div>
-              <div className="totem-screen-2">
-                <div className="totem-screen-2-text">NEXOLED PIX</div>
+                <div style={{ width: 75, display: "flex", alignItems: "flex-end", justifyContent: "center", flexShrink: 0 }}>
+                <img src="/NEXOLED_LOGO_2.jpeg" alt="NexoLED" style={{ width: "100%", borderRadius: 8, opacity: 0.85 }} />
               </div>
             </div>
           </div>
