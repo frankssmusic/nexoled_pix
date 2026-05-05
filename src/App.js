@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "./supabase";
 
 const ADMIN_PASSWORD = "admin9999";
@@ -384,30 +384,27 @@ function ViewPantalla({ fotos, onExit }) {
   );
 }
 
-// Admin usa campos controlados directamente desde evento prop — sin useState local para nombre/clave
-function ViewAdmin({ evento, fotos, onRefresh }) {
+function ViewAdmin({ evento, fotos, onRefresh, onUpdateEvento }) {
   const [loggedIn, setLoggedIn] = useState(false);
   const [pass, setPass] = useState("");
   const [error, setError] = useState("");
   const [toast, setToast] = useState(null);
-  const [editNombre, setEditNombre] = useState("");
-  const [editClave, setEditClave] = useState("");
-  const [initialized, setInitialized] = useState(false);
-
-  useEffect(() => {
-    if (evento && !initialized) {
-      setEditNombre(evento.nombre);
-      setEditClave(evento.clave_operador);
-      setInitialized(true);
-    }
-  }, [evento, initialized]);
+  const [editNombre, setEditNombre] = useState(evento?.nombre || "");
+  const [editClave, setEditClave] = useState(evento?.clave_operador || "");
 
   const handleSave = async () => {
     if (!evento) return;
-    await supabase.from("eventos").update({ nombre: editNombre, clave_operador: editClave }).eq("id", evento.id);
+    const { error: saveError } = await supabase
+      .from("eventos")
+      .update({ nombre: editNombre, clave_operador: editClave })
+      .eq("id", evento.id);
+    if (saveError) {
+      setToast("❌ Error al guardar");
+      return;
+    }
     setToast("✅ Configuración guardada");
-    setInitialized(false); // fuerza re-sync con datos frescos
-    await onRefresh();
+    // Actualizar el estado global directamente sin re-fetch
+    onUpdateEvento({ ...evento, nombre: editNombre, clave_operador: editClave });
   };
 
   const handleClear = async () => {
@@ -475,7 +472,7 @@ export default function App() {
   const [fotos, setFotos] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     const { data: ev } = await supabase.from("eventos").select("*").eq("activo", true).single();
     setEvento(ev);
     if (ev) {
@@ -483,9 +480,9 @@ export default function App() {
       setFotos(ft || []);
     }
     setLoading(false);
-  };
+  }, []);
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   useEffect(() => {
     if (!evento) return;
@@ -493,7 +490,7 @@ export default function App() {
       .on("postgres_changes", { event: "*", schema: "public", table: "fotos" }, () => fetchData())
       .subscribe();
     return () => supabase.removeChannel(channel);
-  }, [evento]);
+  }, [evento, fetchData]);
 
   const views = [
     { key: "asistente", label: "📱 Asistente" },
@@ -536,7 +533,7 @@ export default function App() {
         </nav>
         {view === "asistente" && <ViewAsistente evento={evento} />}
         {view === "operador" && <ViewOperador evento={evento} fotos={fotos} onRefresh={fetchData} />}
-        {view === "admin" && <ViewAdmin evento={evento} fotos={fotos} onRefresh={fetchData} />}
+        {view === "admin" && <ViewAdmin evento={evento} fotos={fotos} onRefresh={fetchData} onUpdateEvento={setEvento} />}
       </div>
     </>
   );
