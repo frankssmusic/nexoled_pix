@@ -397,17 +397,9 @@ function ViewAdmin({ evento, fotos, onRefresh }) {
   const [pass, setPass] = useState("");
   const [error, setError] = useState("");
   const [toast, setToast] = useState(null);
-  const [eventName, setEventName] = useState("");
-  const [opPass, setOpPass] = useState("");
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (evento && eventName === "") {
-      setEventName(evento.nombre);
-      setOpPass(evento.clave_operador);
-    }
-  }, [evento]);
-
+  const [eventName, setEventName] = useState(evento?.nombre || "");
+  const [opPass, setOpPass] = useState(evento?.clave_operador || "");
+  
   const handleSave = async () => {
     if (!evento) return;
     await supabase.from("eventos").update({ nombre: eventName, clave_operador: opPass }).eq("id", evento.id);
