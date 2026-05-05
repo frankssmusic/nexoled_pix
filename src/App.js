@@ -189,7 +189,7 @@ function ViewAsistente({ evento }) {
                 </div>
               </div>
                 <div style={{ width: 75, display: "flex", alignItems: "flex-end", justifyContent: "center", flexShrink: 0 }}>
-                <img src="/NEXOLED_LOGO_2.jpeg" alt="NexoLED" style={{ width: "100%", borderRadius: 8, opacity: 0.85 }} />
+                <img src="/nexoled_logo.png" alt="NexoLED" style={{ width: "100%", borderRadius: 8 }} />
               </div>
             </div>
           </div>
