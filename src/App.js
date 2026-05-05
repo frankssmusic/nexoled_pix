@@ -347,8 +347,8 @@ function ViewPantalla({ fotos, onExit }) {
     return () => clearInterval(t);
   }, [approved.length]);
 
-  useEffect(() => { if (current >= approved.length && approved.length > 0) setCurrent(0); }, [approved.length]);
-
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+useEffect(() => { if (current >= approved.length && approved.length > 0) setCurrent(0); }, [approved.length]);
   return (
     <div className="slideshow-wrap">
       <div className="slideshow-bar">
