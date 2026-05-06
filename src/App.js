@@ -502,13 +502,17 @@ export default function App() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  useEffect(() => {
+useEffect(() => {
     if (!evento) return;
+    const fetchFotos = async () => {
+      const { data: ft } = await supabase.from("fotos").select("*").eq("evento_id", evento.id).order("created_at", { ascending: false });
+      setFotos(ft || []);
+    };
     const channel = supabase.channel("fotos-realtime")
-      .on("postgres_changes", { event: "*", schema: "public", table: "fotos" }, () => fetchData())
+      .on("postgres_changes", { event: "*", schema: "public", table: "fotos" }, () => fetchFotos())
       .subscribe();
     return () => supabase.removeChannel(channel);
-  }, [evento, fetchData]);
+  }, [evento]);
 
   if (loading) return (
     <>
