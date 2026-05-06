@@ -393,6 +393,7 @@ function ViewPantalla({ fotos }) {
 }
 
 function ViewAdmin({ evento, fotos, onRefreshFotos, onUpdateEvento }) {
+  console.log("ViewAdmin montado con evento:", evento?.nombre);
   const [loggedIn, setLoggedIn] = useState(false);
   const [pass, setPass] = useState("");
   const [error, setError] = useState("");
