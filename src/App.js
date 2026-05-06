@@ -3,6 +3,14 @@ import { supabase } from "./supabase";
 
 const ADMIN_PASSWORD = "admin9999";
 
+function getRoute() {
+  const path = window.location.pathname.replace(/^\/+|\/+$/g, "").toLowerCase();
+  if (path === "operador") return "operador";
+  if (path === "admin") return "admin";
+  if (path === "pantalla") return "pantalla";
+  return "asistente";
+}
+
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -19,12 +27,6 @@ const css = `
   .app-wrap { position: relative; z-index: 1; min-height: 100vh; }
   .logo-main { font-family: 'Orbitron', monospace; font-weight: 900; background: linear-gradient(135deg, #60ffff 0%, #00f5ff 40%, #ff00aa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: 3px; animation: logoGlow 3s ease-in-out infinite; }
   .logo-pix { font-family: 'Rajdhani'; font-weight: 700; color: #ff00aa; letter-spacing: 6px; font-size: 10px; text-transform: uppercase; margin-top: -2px; }
-  .nav-bar { display: flex; gap: 4px; padding: 10px 16px; background: #0d0f1aee; backdrop-filter: blur(20px); border-bottom: 1px solid #1a1d35; position: sticky; top: 0; z-index: 40; flex-wrap: wrap; align-items: center; }
-  .nav-label { color: #5a5f85; font-size: 9px; font-family: 'Orbitron'; margin-right: 8px; letter-spacing: 2px; }
-  .nav-btn { padding: 5px 12px; border-radius: 6px; border: 1px solid #1a1d35; background: transparent; color: #5a5f85; cursor: pointer; font-family: 'Rajdhani'; font-size: 12px; font-weight: 600; transition: all 0.2s; }
-  .nav-btn:hover { border-color: #00f5ff66; color: #00f5ff; background: #00f5ff18; }
-  .nav-btn.active { background: linear-gradient(135deg, #00f5ff18, #ff00aa18); border-color: #00f5ff; color: #60ffff; }
-  .pending-badge { margin-left: auto; font-size: 10px; color: #ff9900; font-family: 'Orbitron'; letter-spacing: 1px; background: #ff990015; border: 1px solid #ff990033; padding: 3px 10px; border-radius: 20px; }
   .card { background: #131628; border: 1px solid #1a1d35; border-radius: 16px; padding: 24px; backdrop-filter: blur(10px); }
   .btn { padding: 11px 22px; border-radius: 10px; border: none; font-family: 'Rajdhani'; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s; letter-spacing: 1px; text-transform: uppercase; }
   .btn-cyan { background: linear-gradient(135deg, #00f5ff, #0099bb); color: #000; box-shadow: 0 4px 20px #00f5ff44; }
@@ -46,17 +48,22 @@ const css = `
   .badge-pending { background: #ff990018; color: #ff9900; border: 1px solid #ff990033; }
   .badge-approved { background: #00ff8818; color: #00ff88; border: 1px solid #00ff8833; }
   .badge-rejected { background: #ff335518; color: #ff3355; border: 1px solid #ff335533; }
-  .totem-wrap { display: flex; flex-direction: row; align-items: flex-end; justify-content: center; gap: 16px; margin: 8px 0; }
-  .totem-screen { position: relative; width: 110px; aspect-ratio: 0.4 / 1; border-radius: 6px; overflow: hidden; cursor: pointer; border: 2px solid #00f5ff88; animation: ledGlow 3s ease-in-out infinite; transition: all 0.3s; flex-shrink: 0; }
+
+  /* TOTEM CENTRADO */
+  .totem-center { display: flex; flex-direction: column; align-items: center; gap: 20px; margin: 16px 0; }
+  .totem-logo-top { width: 100px; }
+  .totem-logo-top img { width: 100%; border-radius: 8px; }
+  .totem-screen { position: relative; width: 140px; aspect-ratio: 0.4 / 1; border-radius: 8px; overflow: hidden; cursor: pointer; border: 2px solid #00f5ff88; animation: ledGlow 3s ease-in-out infinite; transition: all 0.3s; }
   .totem-screen:hover { border-color: #00f5ff; transform: scale(1.03) translateY(-4px); }
   .totem-screen input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; z-index: 2; }
-  .totem-inner { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(180deg, #080c20 0%, #0d1030 100%); gap: 10px; padding: 12px; }
-  .totem-icon { font-size: 32px; filter: drop-shadow(0 0 10px #00f5ff); }
-  .totem-text { font-family: 'Orbitron'; font-weight: 900; font-size: 11px; color: #ffffff; letter-spacing: 1px; text-align: center; text-shadow: 0 0 10px #00f5ff, 0 0 20px #00f5ff; line-height: 1.4; }
-  .totem-sub { font-size: 9px; color: #8890c0; font-family: 'Rajdhani'; font-weight: 700; letter-spacing: 1px; text-align: center; }
-  .totem-screen::before, .totem-screen::after { content: ''; position: absolute; width: 5px; height: 5px; border-radius: 50%; background: #00f5ff; box-shadow: 0 0 6px #00f5ff; z-index: 3; }
-  .totem-screen::before { top: 5px; left: 5px; }
-  .totem-screen::after { top: 5px; right: 5px; }
+  .totem-inner { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(180deg, #080c20 0%, #0d1030 100%); gap: 14px; padding: 16px; }
+  .totem-icon { font-size: 40px; filter: drop-shadow(0 0 12px #00f5ff); }
+  .totem-text { font-family: 'Orbitron'; font-weight: 900; font-size: 14px; color: #ffffff; letter-spacing: 1px; text-align: center; text-shadow: 0 0 10px #00f5ff, 0 0 20px #00f5ff; line-height: 1.4; }
+  .totem-sub { font-size: 11px; color: #8890c0; font-family: 'Rajdhani'; font-weight: 700; letter-spacing: 1px; text-align: center; }
+  .totem-screen::before, .totem-screen::after { content: ''; position: absolute; width: 6px; height: 6px; border-radius: 50%; background: #00f5ff; box-shadow: 0 0 8px #00f5ff; z-index: 3; }
+  .totem-screen::before { top: 6px; left: 6px; }
+  .totem-screen::after { top: 6px; right: 6px; }
+
   .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
   .photo-card { border-radius: 10px; overflow: hidden; border: 2px solid #1a1d35; cursor: pointer; transition: all 0.2s; position: relative; background: #060810; }
   .photo-card:hover { border-color: #00f5ff55; transform: translateY(-3px); box-shadow: 0 8px 24px #00f5ff18; }
@@ -78,15 +85,22 @@ const css = `
   .stat-card { background: #060810; border: 1px solid #1a1d35; border-radius: 10px; padding: 14px; text-align: center; }
   .stat-val { font-family: 'Orbitron'; font-weight: 900; font-size: 26px; }
   .stat-label { font-size: 10px; color: #5a5f85; margin-top: 2px; font-family: 'Rajdhani'; letter-spacing: 1px; }
-  .evento-header { text-align: center; padding: 32px 20px 20px; }
-  .evento-presenta { font-family: 'Rajdhani'; font-size: 12px; color: #5a5f85; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 4px; }
-  .evento-nombre { font-family: 'Orbitron'; font-weight: 700; font-size: 18px; background: linear-gradient(135deg, #60ffff, #ff60cc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.3; }
+  .evento-header { text-align: center; padding: 28px 20px 12px; }
+  .evento-presenta { font-family: 'Rajdhani'; font-size: 13px; color: #5a5f85; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 4px; }
+  .evento-nombre { font-family: 'Orbitron'; font-weight: 700; font-size: 20px; background: linear-gradient(135deg, #60ffff, #ff60cc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.3; }
   .filter-tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
   .filter-tab { padding: 6px 14px; border-radius: 7px; border: 1px solid #1a1d35; background: transparent; color: #5a5f85; cursor: pointer; font-family: 'Rajdhani'; font-size: 12px; font-weight: 600; transition: all 0.2s; }
   .filter-tab.active { background: #00f5ff18; border-color: #00f5ff; color: #00f5ff; }
   ::-webkit-scrollbar { width: 3px; }
   ::-webkit-scrollbar-thumb { background: #1a1d35; border-radius: 2px; }
-  @media (max-width: 480px) { .nav-btn { padding: 4px 8px; font-size: 10px; } .card { padding: 16px; } .stat-val { font-size: 20px; } .evento-nombre { font-size: 15px; } .totem-screen { width: 90px; } .photo-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); } }
+  @media (max-width: 480px) {
+    .card { padding: 18px; }
+    .stat-val { font-size: 20px; }
+    .evento-nombre { font-size: 17px; }
+    .totem-screen { width: 130px; }
+    .totem-logo-top { width: 90px; }
+    .photo-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+  }
 `;
 
 function BokehBg() {
@@ -113,13 +127,14 @@ function Toast({ msg, onDone }) {
 
 function Logo({ size = 20 }) {
   return (
-    <div>
+    <div style={{ textAlign: "center" }}>
       <div className="logo-main" style={{ fontSize: size }}>NEXOLED</div>
       <div className="logo-pix">PIX</div>
     </div>
   );
 }
 
+// ── ASISTENTE (vista QR - limpia, centrada, sin nav) ──────────────────────
 function ViewAsistente({ evento }) {
   const [step, setStep] = useState("upload");
   const [preview, setPreview] = useState(null);
@@ -158,16 +173,16 @@ function ViewAsistente({ evento }) {
 
   const NexoledBanner = () => (
     <a href="https://nexoled.vercel.app" target="_blank" rel="noreferrer" style={{ textDecoration: "none", display: "block", marginTop: 24 }}>
-      <div style={{ padding: "16px", background: "#131628", border: "1px solid #ff00aa33", borderRadius: 12, textAlign: "center", cursor: "pointer" }}>
-        <div style={{ fontSize: 13, fontFamily: "Rajdhani", fontWeight: 700, color: "#e8eaf6", marginBottom: 6 }}>¿Quieres proyectar tus momentos en tu evento?</div>
-        <div style={{ fontSize: 12, color: "#5a5f85", fontFamily: "Inter", marginBottom: 10, lineHeight: 1.5 }}>Visita nuestros servicios y contáctanos para personalizar tu fiesta 🎉</div>
-        <div style={{ display: "inline-block", padding: "6px 16px", background: "linear-gradient(135deg, #ff00aa, #aa0066)", borderRadius: 20, fontSize: 11, fontFamily: "Rajdhani", fontWeight: 700, color: "#fff", letterSpacing: 1 }}>VISITAR NEXOLED →</div>
+      <div style={{ padding: "18px 16px", background: "#131628", border: "1px solid #ff00aa33", borderRadius: 12, textAlign: "center" }}>
+        <div style={{ fontSize: 14, fontFamily: "Rajdhani", fontWeight: 700, color: "#e8eaf6", marginBottom: 6 }}>¿Quieres proyectar tus momentos en tu evento?</div>
+        <div style={{ fontSize: 13, color: "#5a5f85", fontFamily: "Inter", marginBottom: 12, lineHeight: 1.5 }}>Visita nuestros servicios y contáctanos para personalizar tu fiesta 🎉</div>
+        <div style={{ display: "inline-block", padding: "8px 20px", background: "linear-gradient(135deg, #ff00aa, #aa0066)", borderRadius: 20, fontSize: 12, fontFamily: "Rajdhani", fontWeight: 700, color: "#fff", letterSpacing: 1 }}>VISITAR NEXOLED →</div>
       </div>
     </a>
   );
 
   if (!evento) return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <div style={{ textAlign: "center", color: "#5a5f85" }}>
         <div style={{ fontSize: 40, marginBottom: 12 }}>⚠️</div>
         <div style={{ fontFamily: "Rajdhani", fontSize: 16 }}>No hay evento activo.</div>
@@ -176,35 +191,42 @@ function ViewAsistente({ evento }) {
   );
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", padding: "0 16px 40px" }}>
-      <div className="evento-header">
-        <div className="evento-presenta">NexoLED presenta</div>
-        <div className="evento-nombre">{evento.nombre}</div>
-      </div>
-      <div style={{ width: "100%", maxWidth: 420 }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "20px 20px 40px" }}>
+      <div style={{ width: "100%", maxWidth: 380 }}>
+
+        {/* HEADER */}
+        <div className="evento-header">
+          <div className="evento-presenta">NexoLED presenta</div>
+          <div className="evento-nombre">{evento.nombre}</div>
+        </div>
+
         {step === "upload" && (
           <div style={{ animation: "fadeInUp 0.4s ease" }}>
-            <div className="card">
+            <div style={{ textAlign: "center", marginBottom: 8 }}>
               <div className="tag">EVENTO ACTIVO</div>
-              <h2 style={{ fontFamily: "Rajdhani", fontWeight: 700, fontSize: 20, marginBottom: 6, letterSpacing: 1 }}>Comparte tu momento</h2>
-              <p style={{ color: "#5a5f85", fontSize: 13, marginBottom: 20, lineHeight: 1.5 }}>Tu foto aparecerá en la pantalla LED tras ser aprobada.</p>
-              <div className="totem-wrap">
-                <div className="totem-screen">
-                  <input ref={fileRef} type="file" accept="image/*" onChange={e => handleFile(e.target.files[0])} />
-                  <div className="totem-inner">
-                    <div className="totem-icon">📸</div>
-                    <div className="totem-text">SUBIR FOTO</div>
-                    <div className="totem-sub">JPG · PNG · HEIC</div>
-                  </div>
-                </div>
-                <div style={{ width: 75, display: "flex", alignItems: "flex-end", justifyContent: "center", flexShrink: 0 }}>
-                  <img src="/nexoled_logo.png" alt="NexoLED" style={{ width: "100%", borderRadius: 8 }} />
+              <h2 style={{ fontFamily: "Rajdhani", fontWeight: 700, fontSize: 22, marginBottom: 6 }}>Comparte tu momento</h2>
+              <p style={{ color: "#5a5f85", fontSize: 13, lineHeight: 1.5 }}>Tu foto aparecerá en la pantalla LED tras ser aprobada.</p>
+            </div>
+
+            {/* TOTEM CENTRADO CON LOGO ARRIBA */}
+            <div className="totem-center">
+              <div className="totem-logo-top">
+                <img src="/nexoled_logo.png" alt="NexoLED" />
+              </div>
+              <div className="totem-screen">
+                <input ref={fileRef} type="file" accept="image/*" onChange={e => handleFile(e.target.files[0])} />
+                <div className="totem-inner">
+                  <div className="totem-icon">📸</div>
+                  <div className="totem-text">SUBIR FOTO</div>
+                  <div className="totem-sub">JPG · PNG · HEIC</div>
                 </div>
               </div>
             </div>
+
             <NexoledBanner />
           </div>
         )}
+
         {step === "preview" && (
           <div style={{ animation: "fadeInUp 0.4s ease" }}>
             <div className="card">
@@ -219,6 +241,7 @@ function ViewAsistente({ evento }) {
             <NexoledBanner />
           </div>
         )}
+
         {step === "sent" && (
           <div style={{ animation: "fadeInUp 0.4s ease" }}>
             <div className="card" style={{ textAlign: "center" }}>
@@ -236,6 +259,7 @@ function ViewAsistente({ evento }) {
   );
 }
 
+// ── OPERADOR ──────────────────────────────────────────────────────────────
 function ViewOperador({ evento, fotos, onRefresh }) {
   const [loggedIn, setLoggedIn] = useState(false);
   const [pass, setPass] = useState("");
@@ -346,7 +370,8 @@ function ViewOperador({ evento, fotos, onRefresh }) {
   );
 }
 
-function ViewPantalla({ fotos, onExit }) {
+// ── PANTALLA LED ──────────────────────────────────────────────────────────
+function ViewPantalla({ fotos }) {
   const approved = fotos.filter(p => p.status === "approved");
   const [current, setCurrent] = useState(0);
   useEffect(() => {
@@ -365,10 +390,7 @@ function ViewPantalla({ fotos, onExit }) {
           <span className="dot dot-live"></span>
           <span style={{ fontSize: 10, color: "#444", fontFamily: "Orbitron", letterSpacing: 2 }}>EN VIVO</span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontSize: 10, color: "#333", fontFamily: "Orbitron" }}>{approved.length} FOTO{approved.length !== 1 ? "S" : ""}</span>
-          <button className="btn btn-sm btn-outline" style={{ fontSize: 10 }} onClick={onExit}>← Salir</button>
-        </div>
+        <span style={{ fontSize: 10, color: "#333", fontFamily: "Orbitron" }}>{approved.length} FOTO{approved.length !== 1 ? "S" : ""}</span>
       </div>
       <div className="slideshow-body">
         {approved.length === 0 ? (
@@ -384,6 +406,7 @@ function ViewPantalla({ fotos, onExit }) {
   );
 }
 
+// ── ADMIN ─────────────────────────────────────────────────────────────────
 function ViewAdmin({ evento, fotos, onRefresh, onUpdateEvento }) {
   const [loggedIn, setLoggedIn] = useState(false);
   const [pass, setPass] = useState("");
@@ -394,16 +417,9 @@ function ViewAdmin({ evento, fotos, onRefresh, onUpdateEvento }) {
 
   const handleSave = async () => {
     if (!evento) return;
-    const { error: saveError } = await supabase
-      .from("eventos")
-      .update({ nombre: editNombre, clave_operador: editClave })
-      .eq("id", evento.id);
-    if (saveError) {
-      setToast("❌ Error al guardar");
-      return;
-    }
+    const { error: saveError } = await supabase.from("eventos").update({ nombre: editNombre, clave_operador: editClave }).eq("id", evento.id);
+    if (saveError) { setToast("❌ Error al guardar"); return; }
     setToast("✅ Configuración guardada");
-    // Actualizar el estado global directamente sin re-fetch
     onUpdateEvento({ ...evento, nombre: editNombre, clave_operador: editClave });
   };
 
@@ -458,7 +474,8 @@ function ViewAdmin({ evento, fotos, onRefresh, onUpdateEvento }) {
         <button className="btn btn-danger btn-sm" style={{ width: "100%" }} onClick={handleClear}>🗑️ Borrar todas las fotos del evento</button>
         <div style={{ marginTop: 14, padding: 12, background: "#060810", borderRadius: 8, fontSize: 11, color: "#5a5f85", lineHeight: 1.8 }}>
           <strong style={{ color: "#e8eaf6", fontFamily: "Rajdhani" }}>Acceso rápido</strong><br />
-          URL: <span style={{ color: "#00f5ff", fontFamily: "Orbitron", fontSize: 10 }}>nexoledpix.vercel.app</span><br />
+          URL asistente: <span style={{ color: "#00f5ff", fontFamily: "Orbitron", fontSize: 10 }}>nexoledpix.vercel.app</span><br />
+          URL operador: <span style={{ color: "#00f5ff", fontFamily: "Orbitron", fontSize: 10 }}>nexoledpix.vercel.app/operador</span><br />
           Clave operador: <span style={{ color: "#ff00aa", fontFamily: "Orbitron", fontSize: 10 }}>{editClave}</span>
         </div>
       </div>
@@ -466,8 +483,9 @@ function ViewAdmin({ evento, fotos, onRefresh, onUpdateEvento }) {
   );
 }
 
+// ── ROOT ──────────────────────────────────────────────────────────────────
 export default function App() {
-  const [view, setView] = useState("asistente");
+  const [view] = useState(getRoute);
   const [evento, setEvento] = useState(null);
   const [fotos, setFotos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -492,13 +510,6 @@ export default function App() {
     return () => supabase.removeChannel(channel);
   }, [evento, fetchData]);
 
-  const views = [
-    { key: "asistente", label: "📱 Asistente" },
-    { key: "operador", label: "🎛️ Operador" },
-    { key: "pantalla", label: "📺 Pantalla" },
-    { key: "admin", label: "⚙️ Admin" },
-  ];
-
   if (loading) return (
     <>
       <style>{css}</style>
@@ -513,7 +524,7 @@ export default function App() {
   if (view === "pantalla") return (
     <>
       <style>{css}</style>
-      <ViewPantalla fotos={fotos} onExit={() => setView("operador")} />
+      <ViewPantalla fotos={fotos} />
     </>
   );
 
@@ -522,15 +533,6 @@ export default function App() {
       <style>{css}</style>
       <BokehBg />
       <div className="app-wrap">
-        <nav className="nav-bar">
-          <span className="nav-label">PIX</span>
-          {views.map(v => (
-            <button key={v.key} className={`nav-btn ${view === v.key ? "active" : ""}`} onClick={() => setView(v.key)}>{v.label}</button>
-          ))}
-          {fotos.filter(p => p.status === "pending").length > 0 && (
-            <div className="pending-badge">● {fotos.filter(p => p.status === "pending").length} pendiente(s)</div>
-          )}
-        </nav>
         {view === "asistente" && <ViewAsistente evento={evento} />}
         {view === "operador" && <ViewOperador evento={evento} fotos={fotos} onRefresh={fetchData} />}
         {view === "admin" && <ViewAdmin evento={evento} fotos={fotos} onRefresh={fetchData} onUpdateEvento={setEvento} />}
