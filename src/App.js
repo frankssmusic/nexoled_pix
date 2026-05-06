@@ -286,7 +286,12 @@ function ViewAsistente({evento}) {
 }
 
 function ViewOperador({evento,fotos,onRefreshFotos}) {
-  const [loggedIn,setLoggedIn] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(() => {
+  const saved = sessionStorage.getItem("op_auth");
+  if (!saved) return false;
+  const { ts } = JSON.parse(saved);
+  return Date.now() - ts < 15 * 60 * 1000; // 15 minutos
+});
   const [pass,setPass] = useState("");
   const [error,setError] = useState("");
   const [selected,setSelected] = useState([]);
@@ -309,7 +314,11 @@ function ViewOperador({evento,fotos,onRefreshFotos}) {
 
   const handleLogin = () => {
     if(!evento) return;
-    if(pass===evento.clave_operador||pass===ADMIN_PASSWORD){setLoggedIn(true);setError("");}
+    if(pass===evento.clave_operador||pass===ADMIN_PASSWORD){
+      sessionStorage.setItem("op_auth", JSON.stringify({ ts: Date.now() }));
+      setLoggedIn(true);
+      setError("");
+    }
     else setError("Clave incorrecta");
   };
 
