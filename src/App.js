@@ -48,8 +48,6 @@ const css = `
   .badge-pending { background: #ff990018; color: #ff9900; border: 1px solid #ff990033; }
   .badge-approved { background: #00ff8818; color: #00ff88; border: 1px solid #00ff8833; }
   .badge-rejected { background: #ff335518; color: #ff3355; border: 1px solid #ff335533; }
-
-  /* TOTEM CENTRADO */
   .totem-center { display: flex; flex-direction: column; align-items: center; gap: 20px; margin: 16px 0; }
   .totem-logo-top { width: 100px; }
   .totem-logo-top img { width: 100%; border-radius: 8px; }
@@ -63,7 +61,6 @@ const css = `
   .totem-screen::before, .totem-screen::after { content: ''; position: absolute; width: 6px; height: 6px; border-radius: 50%; background: #00f5ff; box-shadow: 0 0 8px #00f5ff; z-index: 3; }
   .totem-screen::before { top: 6px; left: 6px; }
   .totem-screen::after { top: 6px; right: 6px; }
-
   .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
   .photo-card { border-radius: 10px; overflow: hidden; border: 2px solid #1a1d35; cursor: pointer; transition: all 0.2s; position: relative; background: #060810; }
   .photo-card:hover { border-color: #00f5ff55; transform: translateY(-3px); box-shadow: 0 8px 24px #00f5ff18; }
@@ -134,7 +131,6 @@ function Logo({ size = 20 }) {
   );
 }
 
-// ── ASISTENTE (vista QR - limpia, centrada, sin nav) ──────────────────────
 function ViewAsistente({ evento }) {
   const [step, setStep] = useState("upload");
   const [preview, setPreview] = useState(null);
@@ -193,13 +189,10 @@ function ViewAsistente({ evento }) {
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "20px 20px 40px" }}>
       <div style={{ width: "100%", maxWidth: 380 }}>
-
-        {/* HEADER */}
         <div className="evento-header">
           <div className="evento-presenta">NexoLED presenta</div>
           <div className="evento-nombre">{evento.nombre}</div>
         </div>
-
         {step === "upload" && (
           <div style={{ animation: "fadeInUp 0.4s ease" }}>
             <div style={{ textAlign: "center", marginBottom: 8 }}>
@@ -207,8 +200,6 @@ function ViewAsistente({ evento }) {
               <h2 style={{ fontFamily: "Rajdhani", fontWeight: 700, fontSize: 22, marginBottom: 6 }}>Comparte tu momento</h2>
               <p style={{ color: "#5a5f85", fontSize: 13, lineHeight: 1.5 }}>Tu foto aparecerá en la pantalla LED tras ser aprobada.</p>
             </div>
-
-            {/* TOTEM CENTRADO CON LOGO ARRIBA */}
             <div className="totem-center">
               <div className="totem-logo-top">
                 <img src="/nexoled_logo.png" alt="NexoLED" />
@@ -222,11 +213,9 @@ function ViewAsistente({ evento }) {
                 </div>
               </div>
             </div>
-
             <NexoledBanner />
           </div>
         )}
-
         {step === "preview" && (
           <div style={{ animation: "fadeInUp 0.4s ease" }}>
             <div className="card">
@@ -241,7 +230,6 @@ function ViewAsistente({ evento }) {
             <NexoledBanner />
           </div>
         )}
-
         {step === "sent" && (
           <div style={{ animation: "fadeInUp 0.4s ease" }}>
             <div className="card" style={{ textAlign: "center" }}>
@@ -259,8 +247,7 @@ function ViewAsistente({ evento }) {
   );
 }
 
-// ── OPERADOR ──────────────────────────────────────────────────────────────
-function ViewOperador({ evento, fotos, onRefresh }) {
+function ViewOperador({ evento, fotos, onRefreshFotos }) {
   const [loggedIn, setLoggedIn] = useState(false);
   const [pass, setPass] = useState("");
   const [error, setError] = useState("");
@@ -276,7 +263,7 @@ function ViewOperador({ evento, fotos, onRefresh }) {
 
   const updateStatus = async (ids, status) => {
     await supabase.from("fotos").update({ status }).in("id", ids);
-    onRefresh();
+    onRefreshFotos();
   };
 
   const bulkApprove = async () => { await updateStatus(selected, "approved"); setToast(`✅ ${selected.length} foto(s) aprobadas`); setSelected([]); };
@@ -311,7 +298,7 @@ function ViewOperador({ evento, fotos, onRefresh }) {
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span className="dot dot-live"></span>
           <span style={{ fontSize: 11, color: "#5a5f85", fontFamily: "Rajdhani" }}>EN VIVO</span>
-          <button className="btn btn-sm btn-outline" onClick={onRefresh}>↻</button>
+          <button className="btn btn-sm btn-outline" onClick={onRefreshFotos}>↻</button>
         </div>
       </div>
       <div className="stat-grid" style={{ marginBottom: 18 }}>
@@ -370,7 +357,6 @@ function ViewOperador({ evento, fotos, onRefresh }) {
   );
 }
 
-// ── PANTALLA LED ──────────────────────────────────────────────────────────
 function ViewPantalla({ fotos }) {
   const approved = fotos.filter(p => p.status === "approved");
   const [current, setCurrent] = useState(0);
@@ -406,8 +392,7 @@ function ViewPantalla({ fotos }) {
   );
 }
 
-// ── ADMIN ─────────────────────────────────────────────────────────────────
-function ViewAdmin({ evento, fotos, onRefresh, onUpdateEvento }) {
+function ViewAdmin({ evento, fotos, onRefreshFotos, onUpdateEvento }) {
   const [loggedIn, setLoggedIn] = useState(false);
   const [pass, setPass] = useState("");
   const [error, setError] = useState("");
@@ -431,7 +416,7 @@ function ViewAdmin({ evento, fotos, onRefresh, onUpdateEvento }) {
       if (paths.length) await supabase.storage.from("fotos").remove(paths);
     }
     await supabase.from("fotos").delete().eq("evento_id", evento.id);
-    setToast("🗑️ Evento limpiado"); onRefresh();
+    setToast("🗑️ Evento limpiado"); onRefreshFotos();
   };
 
   if (!loggedIn) return (
@@ -483,36 +468,42 @@ function ViewAdmin({ evento, fotos, onRefresh, onUpdateEvento }) {
   );
 }
 
-// ── ROOT ──────────────────────────────────────────────────────────────────
 export default function App() {
   const [view] = useState(getRoute);
   const [evento, setEvento] = useState(null);
   const [fotos, setFotos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const eventoIdRef = useRef(null);
 
-  const fetchData = useCallback(async () => {
-    const { data: ev } = await supabase.from("eventos").select("*").eq("activo", true).single();
-    setEvento(ev);
-    if (ev) {
-      const { data: ft } = await supabase.from("fotos").select("*").eq("evento_id", ev.id).order("created_at", { ascending: false });
-      setFotos(ft || []);
-    }
-    setLoading(false);
+  // Solo carga fotos — no toca evento
+  const fetchFotos = useCallback(async (eventoId) => {
+    const { data: ft } = await supabase.from("fotos").select("*").eq("evento_id", eventoId).order("created_at", { ascending: false });
+    setFotos(ft || []);
   }, []);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
-
-useEffect(() => {
-    if (!evento) return;
-    const fetchFotos = async () => {
-      const { data: ft } = await supabase.from("fotos").select("*").eq("evento_id", evento.id).order("created_at", { ascending: false });
-      setFotos(ft || []);
+  // Carga inicial — solo se ejecuta una vez
+  useEffect(() => {
+    const init = async () => {
+      const { data: ev } = await supabase.from("eventos").select("*").eq("activo", true).single();
+      if (ev) {
+        setEvento(ev);
+        eventoIdRef.current = ev.id;
+        await fetchFotos(ev.id);
+      }
+      setLoading(false);
     };
-    const channel = supabase.channel("fotos-realtime")
-      .on("postgres_changes", { event: "*", schema: "public", table: "fotos" }, () => fetchFotos())
+    init();
+  }, [fetchFotos]);
+
+  // Realtime — solo escucha fotos, nunca toca evento
+  useEffect(() => {
+    if (!eventoIdRef.current) return;
+    const id = eventoIdRef.current;
+    const channel = supabase.channel("fotos-" + id)
+      .on("postgres_changes", { event: "*", schema: "public", table: "fotos" }, () => fetchFotos(id))
       .subscribe();
     return () => supabase.removeChannel(channel);
-  }, [evento]);
+  }, [fetchFotos]);
 
   if (loading) return (
     <>
@@ -538,8 +529,8 @@ useEffect(() => {
       <BokehBg />
       <div className="app-wrap">
         {view === "asistente" && <ViewAsistente evento={evento} />}
-        {view === "operador" && <ViewOperador evento={evento} fotos={fotos} onRefresh={fetchData} />}
-        {view === "admin" && <ViewAdmin evento={evento} fotos={fotos} onRefresh={fetchData} onUpdateEvento={setEvento} />}
+        {view === "operador" && <ViewOperador evento={evento} fotos={fotos} onRefreshFotos={() => fetchFotos(eventoIdRef.current)} />}
+        {view === "admin" && <ViewAdmin evento={evento} fotos={fotos} onRefreshFotos={() => fetchFotos(eventoIdRef.current)} onUpdateEvento={setEvento} />}
       </div>
     </>
   );
