@@ -346,6 +346,7 @@ function ViewOperador({evento,fotos,onRefreshFotos}) {
           <span className="dot dot-live"></span>
           <span style={{fontSize:11,color:"#5a5f85",fontFamily:"Rajdhani"}}>EN VIVO</span>
           <button className="btn btn-sm btn-outline" onClick={onRefreshFotos}>↻</button>
+<button className="btn btn-sm btn-danger" onClick={() => { sessionStorage.removeItem("op_auth"); setLoggedIn(false); }}>Salir</button>
         </div>
       </div>
       <div className="stat-grid" style={{marginBottom:16}}>
