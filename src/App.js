@@ -25,12 +25,8 @@ const css = `
   @keyframes ledGlow { 0%,100%{box-shadow:0 0 12px #00f5ff,0 0 30px #00f5ff44,inset 0 0 20px #00f5ff11} 50%{box-shadow:0 0 6px #00f5ff,0 0 15px #00f5ff22,inset 0 0 10px #00f5ff08} }
   @keyframes logoGlow { 0%,100%{filter:drop-shadow(0 0 8px #00f5ff66)} 50%{filter:drop-shadow(0 0 16px #00f5ffaa)} }
   .app-wrap { position: relative; z-index: 1; min-height: 100vh; }
-
-  /* LOGO */
   .logo-main { font-family:'Orbitron',monospace; font-weight:900; background:linear-gradient(135deg,#60ffff 0%,#00f5ff 40%,#ff00aa 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; letter-spacing:3px; animation:logoGlow 3s ease-in-out infinite; }
   .logo-pix { font-family:'Rajdhani'; font-weight:700; color:#ff00aa; letter-spacing:6px; font-size:9px; text-transform:uppercase; margin-top:-2px; }
-
-  /* CARDS / BUTTONS / INPUTS */
   .card { background:#131628; border:1px solid #1a1d35; border-radius:14px; padding:20px; }
   .btn { padding:10px 20px; border-radius:9px; border:none; font-family:'Rajdhani'; font-weight:700; font-size:14px; cursor:pointer; transition:all 0.2s; letter-spacing:1px; text-transform:uppercase; }
   .btn-cyan { background:linear-gradient(135deg,#00f5ff,#0099bb); color:#000; box-shadow:0 4px 16px #00f5ff44; }
@@ -46,24 +42,16 @@ const css = `
   .input { width:100%; padding:11px 14px; border-radius:9px; border:1px solid #1a1d35; background:#060810; color:#e8eaf6; font-family:'Rajdhani'; font-size:14px; font-weight:600; outline:none; transition:all 0.2s; }
   .input:focus { border-color:#00f5ff; box-shadow:0 0 0 3px #00f5ff18; }
   .input::placeholder { color:#5a5f85; }
-
-  /* TAGS */
   .tag { display:inline-block; padding:2px 8px; border-radius:4px; font-size:8px; font-family:'Orbitron'; font-weight:700; background:#00f5ff18; color:#00f5ff; border:1px solid #00f5ff33; letter-spacing:2px; }
   .tag-presenta { display:inline-block; padding:2px 8px; border-radius:4px; font-size:8px; font-family:'Orbitron'; font-weight:700; background:#ffffff15; color:#ffffff; border:1px solid #ffffff33; letter-spacing:2px; }
   .tag-magenta { background:#ff00aa18; color:#ff00aa; border-color:#ff00aa33; }
-
-  /* BADGES */
   .badge { display:inline-block; padding:2px 8px; border-radius:20px; font-size:9px; font-weight:700; font-family:'Orbitron'; letter-spacing:1px; }
   .badge-pending { background:#ff990018; color:#ff9900; border:1px solid #ff990033; }
   .badge-approved { background:#00ff8818; color:#00ff88; border:1px solid #00ff8833; }
   .badge-rejected { background:#ff335518; color:#ff3355; border:1px solid #ff335533; }
-
-  /* ASISTENTE HEADER */
   .asistente-header { text-align:center; padding:16px 0 8px; }
   .evento-presenta-wrap { margin-bottom:4px; }
   .evento-nombre { font-family:'Orbitron'; font-weight:900; font-size:20px; background:linear-gradient(135deg,#60ffff,#ff60cc); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; line-height:1.2; margin-top:6px; }
-
-  /* TOTEM */
   .totem-center { display:flex; flex-direction:column; align-items:center; gap:12px; margin:12px 0; }
   .totem-logo-top { width:135px; }
   .totem-logo-top img { width:100%; border-radius:8px; }
@@ -78,12 +66,8 @@ const css = `
   .totem-screen::before,.totem-screen::after { content:''; position:absolute; width:5px; height:5px; border-radius:50%; background:#00f5ff; box-shadow:0 0 6px #00f5ff; z-index:3; }
   .totem-screen::before { top:5px; left:5px; }
   .totem-screen::after { top:5px; right:5px; }
-
-  /* PATAS DEL TOTEM */
   .totem-base { display:flex; justify-content:center; gap:28px; margin-top:0; }
   .totem-leg { width:8px; height:18px; background:linear-gradient(180deg,#00f5ff44,#00f5ff22); border:1px solid #00f5ff55; border-top:none; border-radius:0 0 3px 3px; box-shadow:0 4px 8px #00f5ff22; }
-
-  /* GRIDS / CARDS */
   .photo-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:10px; }
   .photo-card { border-radius:10px; overflow:hidden; border:2px solid #1a1d35; cursor:pointer; transition:all 0.2s; position:relative; background:#060810; }
   .photo-card:hover { border-color:#00f5ff55; transform:translateY(-3px); }
@@ -93,13 +77,10 @@ const css = `
   .photo-card.selected .photo-check { background:#00f5ff; border-color:#00f5ff; }
   .photo-meta { padding:8px 10px; background:#131628; }
   .photo-time { font-size:10px; color:#5a5f85; font-family:'Orbitron'; letter-spacing:1px; margin-top:4px; }
-
-  /* SLIDESHOW */
   .slideshow-wrap { position:fixed; inset:0; background:#000; display:flex; flex-direction:column; z-index:50; }
   .slideshow-bar { height:52px; background:#000; display:flex; align-items:center; justify-content:space-between; padding:0 20px; border-bottom:1px solid #111; flex-shrink:0; }
-  .slideshow-body { flex:1; display:flex; align-items:center; justify-content:center; overflow:hidden; }
-  .slideshow-img { max-width:100%; max-height:100%; object-fit:contain; animation:fadeInUp 0.8s ease; }
-
+  .slideshow-body { flex:1; display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative; }
+  .slideshow-img { width:100%; height:100%; object-fit:cover; animation:fadeInUp 0.8s ease; }
   .dot { width:7px; height:7px; border-radius:50%; display:inline-block; margin-right:6px; }
   .dot-live { background:#00ff88; animation:pulse 2s infinite; box-shadow:0 0 6px #00ff88; }
   .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#131628; border:1px solid #00f5ff66; color:#e8eaf6; padding:10px 22px; border-radius:9px; font-size:13px; z-index:999; animation:fadeInUp 0.3s ease; white-space:nowrap; font-family:'Rajdhani'; font-weight:700; }
@@ -113,7 +94,6 @@ const css = `
   .filter-tab.active { background:#00f5ff18; border-color:#00f5ff; color:#00f5ff; }
   ::-webkit-scrollbar { width:3px; }
   ::-webkit-scrollbar-thumb { background:#1a1d35; border-radius:2px; }
-
   @media (max-width:480px) {
     .card { padding:16px; }
     .stat-val { font-size:20px; }
@@ -212,8 +192,6 @@ function ViewAsistente({evento}) {
   return (
     <div style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"16px 20px 32px"}}>
       <div style={{width:"100%",maxWidth:360}}>
-
-        {/* HEADER */}
         <div className="asistente-header">
           <div className="evento-presenta-wrap">
             <span className="tag-presenta">NEXOLED PRESENTA</span>
@@ -228,7 +206,6 @@ function ViewAsistente({evento}) {
               <h2 style={{fontFamily:"Orbitron",fontWeight:900,fontSize:17,marginTop:6,marginBottom:4,color:"#fff"}}>¡Comparte tu momento!</h2>
               <p style={{color:"#5a5f85",fontSize:13,fontWeight:600}}>Tu foto se agregará a la fila!</p>
             </div>
-
             <div className="totem-center">
               <div className="totem-logo-top">
                 <img src="/nexoled_logo.png" alt="NexoLED" />
@@ -248,7 +225,6 @@ function ViewAsistente({evento}) {
                 </div>
               </div>
             </div>
-
             <Banner />
           </div>
         )}
@@ -287,11 +263,11 @@ function ViewAsistente({evento}) {
 
 function ViewOperador({evento,fotos,onRefreshFotos}) {
   const [loggedIn, setLoggedIn] = useState(() => {
-  const saved = sessionStorage.getItem("op_auth");
-  if (!saved) return false;
-  const { ts } = JSON.parse(saved);
-  return Date.now() - ts < 15 * 60 * 1000; // 15 minutos
-});
+    const saved = sessionStorage.getItem("op_auth");
+    if (!saved) return false;
+    const { ts } = JSON.parse(saved);
+    return Date.now() - ts < 15 * 60 * 1000;
+  });
   const [pass,setPass] = useState("");
   const [error,setError] = useState("");
   const [selected,setSelected] = useState([]);
@@ -345,8 +321,8 @@ function ViewOperador({evento,fotos,onRefreshFotos}) {
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           <span className="dot dot-live"></span>
           <span style={{fontSize:11,color:"#5a5f85",fontFamily:"Rajdhani"}}>EN VIVO</span>
-          <button className="btn btn-sm btn-outline" onClick={onRefreshFotos} style={{ fontWeight: 900, fontSize: 16, color: "#ffffff" }}>↻</button>
-<button className="btn btn-sm btn-danger" onClick={() => { sessionStorage.removeItem("op_auth"); setLoggedIn(false); }}>Salir</button>
+          <button className="btn btn-sm btn-outline" onClick={onRefreshFotos} style={{fontWeight:900,fontSize:16,color:"#ffffff"}}>↻</button>
+          <button className="btn btn-sm btn-danger" onClick={()=>{sessionStorage.removeItem("op_auth");setLoggedIn(false);}}>Salir</button>
         </div>
       </div>
       <div className="stat-grid" style={{marginBottom:16}}>
@@ -405,21 +381,27 @@ function ViewOperador({evento,fotos,onRefreshFotos}) {
 
 function ViewPantalla({fotos}) {
   const approved = fotos.filter(p=>p.status==="approved");
+
+  // Lógica de slides: menos de 6 → QR al final; 6 o más → QR cada 6 fotos
   const slides = approved.reduce((acc, foto, i) => {
     acc.push({ type: "foto", data: foto });
-    if ((i + 1) % 6 === 0) acc.push({ type: "qr" });
+    if (approved.length >= 6 && (i + 1) % 6 === 0) acc.push({ type: "qr" });
     return acc;
   }, []);
+  if (approved.length > 0 && approved.length < 6) slides.push({ type: "qr" });
+
   const [current,setCurrent] = useState(0);
+
   useEffect(()=>{
     if(slides.length<=1) return;
     const t=setInterval(()=>setCurrent(c=>(c+1)%slides.length),5000);
     return()=>clearInterval(t);
   },[slides.length]);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(()=>{if(current>=approved.length&&approved.length>0)setCurrent(0);},[approved.length]);
 
-return (
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(()=>{if(current>=slides.length&&slides.length>0)setCurrent(0);},[slides.length]);
+
+  return (
     <div className="slideshow-wrap">
       <div className="slideshow-bar">
         <Logo size={14}/>
@@ -436,8 +418,8 @@ return (
             <div style={{fontFamily:"Orbitron",fontSize:11,letterSpacing:2}}>Esperando fotos aprobadas...</div>
           </div>
         ) : slides[current]?.type==="qr" ? (
-          <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"100%",background:"#060810",gap:20}}>
-            <img src="/nexoled_qr_pix.png" alt="QR" style={{width:"80%",maxWidth:300,borderRadius:16}}/>
+          <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",width:"100%",height:"100%",background:"#060810",gap:20}}>
+            <img src="/nexoled_qr_pix.png" alt="QR" style={{width:"75%",maxWidth:280,borderRadius:16}}/>
             <div style={{color:"#00f5ff",fontFamily:"Orbitron",fontSize:14,letterSpacing:2,textAlign:"center"}}>¡SUBE TU FOTO!</div>
           </div>
         ) : (
@@ -517,6 +499,8 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
           <strong style={{color:"#e8eaf6",fontFamily:"Rajdhani"}}>URLs</strong><br/>
           Asistente: <span style={{color:"#00f5ff",fontFamily:"Orbitron",fontSize:9}}>pix.nexoled.cl</span><br/>
           Operador: <span style={{color:"#00f5ff",fontFamily:"Orbitron",fontSize:9}}>pix.nexoled.cl/operador</span><br/>
+          Admin: <span style={{color:"#00f5ff",fontFamily:"Orbitron",fontSize:9}}>pix.nexoled.cl/admin</span><br/>
+          Pantalla: <span style={{color:"#00f5ff",fontFamily:"Orbitron",fontSize:9}}>pix.nexoled.cl/pantalla</span><br/>
           Clave op: <span style={{color:"#ff00aa",fontFamily:"Orbitron",fontSize:9}}>{editClave}</span>
         </div>
       </div>
@@ -558,7 +542,7 @@ export default function App() {
     return()=>supabase.removeChannel(channel);
   },[fetchFotos]);
 
-if(view==="pantalla") return (
+  if(view==="pantalla") return (
     <>
       <style>{css}</style>
       <ViewPantalla fotos={fotos}/>
