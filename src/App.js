@@ -397,11 +397,18 @@ function ViewPantalla({fotos}) {
   }, []);
 
   // Avanzar slides cada 8 segundos
+const slidesRef = useRef(slides);
+  useEffect(() => { slidesRef.current = slides; }, [slides]);
+
   useEffect(() => {
-    if (slides.length <= 1) return;
-    const t = setInterval(() => setCurrent(c => (c + 1) % slides.length), 8000);
+    const t = setInterval(() => {
+      setCurrent(c => {
+        const len = slidesRef.current.length;
+        return len <= 1 ? 0 : (c + 1) % len;
+      });
+    }, 8000);
     return () => clearInterval(t);
-  }, [slides.length]);
+  }, []); // Solo se monta una vez — nunca se reinicia
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (current >= slides.length && slides.length > 0) setCurrent(0); }, [slides.length]);
@@ -522,7 +529,9 @@ export default function App() {
 
   const fetchFotos = useCallback(async (eventoId) => {
     const {data:ft} = await supabase.from("fotos").select("*").eq("evento_id",eventoId).order("created_at",{ascending:false});
-    if (ft && ft.length > 0) setFotos(ft);
+  const fetchFotos = useCallback(async (eventoId) => {
+    const {data:ft} = await supabase.from("fotos").select("*").eq("evento_id",eventoId).order("created_at",{ascending:false});
+    if (ft) setFotos(ft);
   }, []);
 
   useEffect(() => {
