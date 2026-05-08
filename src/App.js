@@ -392,14 +392,15 @@ function ViewPantalla({fotos}) {
   const [current,setCurrent] = useState(0);
 
   // Precargar imágenes
-  useEffect(()=>{
+useEffect(()=>{
     slides.forEach(slide => {
       if(slide.type==="foto") {
         const img = new Image();
         img.src = slide.data.url;
       }
     });
-  },[slides.length]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]);
 
   useEffect(()=>{
     if(slides.length<=1) return;
