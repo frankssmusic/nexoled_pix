@@ -382,7 +382,6 @@ function ViewOperador({evento,fotos,onRefreshFotos}) {
 function ViewPantalla({fotos}) {
   const approved = fotos.filter(p=>p.status==="approved");
 
-  // Lógica de slides: menos de 6 → QR al final; 6 o más → QR cada 6 fotos
   const slides = approved.reduce((acc, foto, i) => {
     acc.push({ type: "foto", data: foto });
     if (approved.length >= 6 && (i + 1) % 6 === 0) acc.push({ type: "qr" });
@@ -392,9 +391,19 @@ function ViewPantalla({fotos}) {
 
   const [current,setCurrent] = useState(0);
 
+  // Precargar imágenes
+  useEffect(()=>{
+    slides.forEach(slide => {
+      if(slide.type==="foto") {
+        const img = new Image();
+        img.src = slide.data.url;
+      }
+    });
+  },[slides.length]);
+
   useEffect(()=>{
     if(slides.length<=1) return;
-    const t=setInterval(()=>setCurrent(c=>(c+1)%slides.length),5000);
+    const t=setInterval(()=>setCurrent(c=>(c+1)%slides.length),8000);
     return()=>clearInterval(t);
   },[slides.length]);
 
@@ -423,10 +432,10 @@ function ViewPantalla({fotos}) {
             <div style={{color:"#00f5ff",fontFamily:"Orbitron",fontSize:14,letterSpacing:2,textAlign:"center"}}>¡SUBE TU FOTO!</div>
           </div>
         ) : (
-         <div key={current} style={{position:"relative",width:"100%",height:"100%",overflow:"hidden"}}>
-  <img src={slides[current]?.data?.url} alt="" style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover",filter:"blur(20px) brightness(0.4)",transform:"scale(1.1)"}} />
-  <img src={slides[current]?.data?.url} alt="" className="slideshow-img" />
-</div>
+          <div key={current} style={{position:"relative",width:"100%",height:"100%",overflow:"hidden"}}>
+            <img src={slides[current]?.data?.url} alt="" style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover",filter:"blur(20px) brightness(0.4)",transform:"scale(1.1)"}} />
+            <img src={slides[current]?.data?.url} alt="" className="slideshow-img" />
+          </div>
         )}
       </div>
     </div>
