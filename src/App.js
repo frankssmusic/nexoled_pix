@@ -505,8 +505,8 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
         <button className="btn btn-danger btn-sm" style={{width:"100%"}} onClick={handleClear}>🗑️ Borrar todas las fotos del evento</button>
         <div style={{marginTop:12,padding:10,background:"#060810",borderRadius:8,fontSize:11,color:"#5a5f85",lineHeight:1.8}}>
           <strong style={{color:"#e8eaf6",fontFamily:"Rajdhani"}}>URLs</strong><br/>
-          Asistente: <span style={{color:"#00f5ff",fontFamily:"Orbitron",fontSize:9}}>nexoledpix.vercel.app</span><br/>
-          Operador: <span style={{color:"#00f5ff",fontFamily:"Orbitron",fontSize:9}}>nexoledpix.vercel.app/operador</span><br/>
+          Asistente: <span style={{color:"#00f5ff",fontFamily:"Orbitron",fontSize:9}}>pix.nexoled.cl</span><br/>
+          Operador: <span style={{color:"#00f5ff",fontFamily:"Orbitron",fontSize:9}}>pix.nexoled.cl/operador</span><br/>
           Clave op: <span style={{color:"#ff00aa",fontFamily:"Orbitron",fontSize:9}}>{editClave}</span>
         </div>
       </div>
