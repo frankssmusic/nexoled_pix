@@ -408,7 +408,7 @@ function ViewPantalla({fotos}) {
   const [current,setCurrent] = useState(0);
   useEffect(()=>{
     if(approved.length<=1) return;
-    const t=setInterval(()=>setCurrent(c=>(c+1)%approved.length),8000);
+    const t=setInterval(()=>setCurrent(c=>(c+1)%approved.length),5000);
     return()=>clearInterval(t);
   },[approved.length]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -548,6 +548,13 @@ export default function App() {
     return()=>supabase.removeChannel(channel);
   },[fetchFotos]);
 
+if(view==="pantalla") return (
+    <>
+      <style>{css}</style>
+      <ViewPantalla fotos={fotos}/>
+    </>
+  );
+
   if(loading) return (
     <>
       <style>{css}</style>
@@ -556,13 +563,6 @@ export default function App() {
         <div className="spinner"></div>
         <div style={{color:"#5a5f85",fontSize:11,fontFamily:"Orbitron",letterSpacing:3}}>CARGANDO NEXOLED PIX</div>
       </div>
-    </>
-  );
-
-  if(view==="pantalla") return (
-    <>
-      <style>{css}</style>
-      <ViewPantalla fotos={fotos}/>
     </>
   );
 
