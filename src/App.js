@@ -546,14 +546,14 @@ const fetchFotos = useCallback(async (eventoId) => {
     init();
   },[fetchFotos]);
 
-  useEffect(()=>{
-    if(!eventoIdRef.current) return;
+useEffect(()=>{
+    if(!eventoIdRef.current || view === "pantalla") return;
     const id = eventoIdRef.current;
     const channel = supabase.channel("fotos-"+id)
       .on("postgres_changes",{event:"*",schema:"public",table:"fotos"},()=>fetchFotos(id))
       .subscribe();
     return()=>supabase.removeChannel(channel);
-  },[fetchFotos]);
+  },[fetchFotos, view]);
 
   if(view==="pantalla") return (
     <>
