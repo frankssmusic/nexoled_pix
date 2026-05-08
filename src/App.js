@@ -405,16 +405,21 @@ function ViewOperador({evento,fotos,onRefreshFotos}) {
 
 function ViewPantalla({fotos}) {
   const approved = fotos.filter(p=>p.status==="approved");
+  const slides = approved.reduce((acc, foto, i) => {
+    acc.push({ type: "foto", data: foto });
+    if ((i + 1) % 6 === 0) acc.push({ type: "qr" });
+    return acc;
+  }, []);
   const [current,setCurrent] = useState(0);
   useEffect(()=>{
-    if(approved.length<=1) return;
-    const t=setInterval(()=>setCurrent(c=>(c+1)%approved.length),5000);
+    if(slides.length<=1) return;
+    const t=setInterval(()=>setCurrent(c=>(c+1)%slides.length),5000);
     return()=>clearInterval(t);
-  },[approved.length]);
+  },[slides.length]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(()=>{if(current>=approved.length&&approved.length>0)setCurrent(0);},[approved.length]);
 
-  return (
+return (
     <div className="slideshow-wrap">
       <div className="slideshow-bar">
         <Logo size={14}/>
@@ -430,8 +435,13 @@ function ViewPantalla({fotos}) {
             <div style={{fontSize:44}}>📺</div>
             <div style={{fontFamily:"Orbitron",fontSize:11,letterSpacing:2}}>Esperando fotos aprobadas...</div>
           </div>
-        ):(
-          <img key={current} src={approved[current]?.url} alt="" className="slideshow-img"/>
+        ) : slides[current]?.type==="qr" ? (
+          <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"100%",background:"#060810",gap:20}}>
+            <img src="/nexoled_qr_pix.png" alt="QR" style={{width:"80%",maxWidth:300,borderRadius:16}}/>
+            <div style={{color:"#00f5ff",fontFamily:"Orbitron",fontSize:14,letterSpacing:2,textAlign:"center"}}>¡SUBE TU FOTO!</div>
+          </div>
+        ) : (
+          <img key={current} src={slides[current]?.data?.url} alt="" className="slideshow-img"/>
         )}
       </div>
     </div>
