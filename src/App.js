@@ -518,9 +518,9 @@ export default function App() {
   const [loading,setLoading] = useState(true);
   const eventoIdRef = useRef(null);
 
-  const fetchFotos = useCallback(async (eventoId) => {
+const fetchFotos = useCallback(async (eventoId) => {
     const {data:ft} = await supabase.from("fotos").select("*").eq("evento_id",eventoId).order("created_at",{ascending:false});
-    setFotos(ft||[]);
+    if(ft && ft.length > 0) setFotos(ft);
   },[]);
 
   useEffect(()=>{
