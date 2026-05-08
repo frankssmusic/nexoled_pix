@@ -80,7 +80,7 @@ const css = `
   .slideshow-wrap { position:fixed; inset:0; background:#000; display:flex; flex-direction:column; z-index:50; }
   .slideshow-bar { height:52px; background:#000; display:flex; align-items:center; justify-content:space-between; padding:0 20px; border-bottom:1px solid #111; flex-shrink:0; }
   .slideshow-body { flex:1; display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative; }
-  .slideshow-img { width:100%; height:100%; object-fit:cover; animation:fadeInUp 0.8s ease; }
+  .slideshow-img { width:100%; height:100%; object-fit:contain; animation:fadeInUp 0.8s ease; position:relative; z-index:1; }
   .dot { width:7px; height:7px; border-radius:50%; display:inline-block; margin-right:6px; }
   .dot-live { background:#00ff88; animation:pulse 2s infinite; box-shadow:0 0 6px #00ff88; }
   .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#131628; border:1px solid #00f5ff66; color:#e8eaf6; padding:10px 22px; border-radius:9px; font-size:13px; z-index:999; animation:fadeInUp 0.3s ease; white-space:nowrap; font-family:'Rajdhani'; font-weight:700; }
@@ -423,7 +423,10 @@ function ViewPantalla({fotos}) {
             <div style={{color:"#00f5ff",fontFamily:"Orbitron",fontSize:14,letterSpacing:2,textAlign:"center"}}>¡SUBE TU FOTO!</div>
           </div>
         ) : (
-          <img key={current} src={slides[current]?.data?.url} alt="" className="slideshow-img"/>
+         <div key={current} style={{position:"relative",width:"100%",height:"100%",overflow:"hidden"}}>
+  <img src={slides[current]?.data?.url} alt="" style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover",filter:"blur(20px) brightness(0.4)",transform:"scale(1.1)"}} />
+  <img src={slides[current]?.data?.url} alt="" className="slideshow-img" />
+</div>
         )}
       </div>
     </div>
