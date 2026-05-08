@@ -79,8 +79,8 @@ const css = `
   .photo-time { font-size:10px; color:#5a5f85; font-family:'Orbitron'; letter-spacing:1px; margin-top:4px; }
   .slideshow-wrap { position:fixed; inset:0; background:#000; display:flex; flex-direction:column; z-index:50; }
   .slideshow-bar { height:52px; background:#000; display:flex; align-items:center; justify-content:space-between; padding:0 20px; border-bottom:1px solid #111; flex-shrink:0; }
-  .slideshow-body { flex:1; display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative; }
-  .slideshow-img { width:100%; height:100%; object-fit:contain; animation:fadeInUp 0.8s ease; position:relative; z-index:1; }
+  .slideshow-body { flex:1; display:flex; align-items:center; justify-content:center; overflow:hidden; background:#000; }
+  .slideshow-img { width:100%; height:100%; object-fit:contain; animation:fadeInUp 0.6s ease; }
   .dot { width:7px; height:7px; border-radius:50%; display:inline-block; margin-right:6px; }
   .dot-live { background:#00ff88; animation:pulse 2s infinite; box-shadow:0 0 6px #00ff88; }
   .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#131628; border:1px solid #00f5ff66; color:#e8eaf6; padding:10px 22px; border-radius:9px; font-size:13px; z-index:999; animation:fadeInUp 0.3s ease; white-space:nowrap; font-family:'Rajdhani'; font-weight:700; }
@@ -198,7 +198,6 @@ function ViewAsistente({evento}) {
           </div>
           <div className="evento-nombre">{evento.nombre}</div>
         </div>
-
         {step === "upload" && (
           <div style={{animation:"fadeInUp 0.4s ease"}}>
             <div style={{textAlign:"center",marginBottom:10}}>
@@ -207,9 +206,7 @@ function ViewAsistente({evento}) {
               <p style={{color:"#5a5f85",fontSize:13,fontWeight:600}}>Tu foto se agregará a la fila!</p>
             </div>
             <div className="totem-center">
-              <div className="totem-logo-top">
-                <img src="/nexoled_logo.png" alt="NexoLED" />
-              </div>
+              <div className="totem-logo-top"><img src="/nexoled_logo.png" alt="NexoLED" /></div>
               <div className="totem-outer">
                 <div className="totem-screen">
                   <input ref={fileRef} type="file" accept="image/*" onChange={e=>handleFile(e.target.files[0])} />
@@ -228,7 +225,6 @@ function ViewAsistente({evento}) {
             <Banner />
           </div>
         )}
-
         {step === "preview" && (
           <div style={{animation:"fadeInUp 0.4s ease"}}>
             <div className="card">
@@ -243,7 +239,6 @@ function ViewAsistente({evento}) {
             <Banner />
           </div>
         )}
-
         {step === "sent" && (
           <div style={{animation:"fadeInUp 0.4s ease"}}>
             <div className="card" style={{textAlign:"center"}}>
@@ -294,8 +289,7 @@ function ViewOperador({evento,fotos,onRefreshFotos}) {
       sessionStorage.setItem("op_auth", JSON.stringify({ ts: Date.now() }));
       setLoggedIn(true);
       setError("");
-    }
-    else setError("Clave incorrecta");
+    } else setError("Clave incorrecta");
   };
 
   if(!loggedIn) return (
@@ -389,27 +383,28 @@ function ViewPantalla({fotos}) {
   }, []);
   if (approved.length > 0 && approved.length < 6) slides.push({ type: "qr" });
 
-  const [current,setCurrent] = useState(0);
+  const [current, setCurrent] = useState(0);
 
-  // Precargar imágenes
-useEffect(()=>{
+  // Precargar imágenes una sola vez al montar
+  useEffect(() => {
     slides.forEach(slide => {
-      if(slide.type==="foto") {
+      if (slide.type === "foto") {
         const img = new Image();
         img.src = slide.data.url;
       }
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[]);
+  }, []);
 
-  useEffect(()=>{
-    if(slides.length<=1) return;
-    const t=setInterval(()=>setCurrent(c=>(c+1)%slides.length),8000);
-    return()=>clearInterval(t);
-  },[slides.length]);
+  // Avanzar slides cada 8 segundos
+  useEffect(() => {
+    if (slides.length <= 1) return;
+    const t = setInterval(() => setCurrent(c => (c + 1) % slides.length), 8000);
+    return () => clearInterval(t);
+  }, [slides.length]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(()=>{if(current>=slides.length&&slides.length>0)setCurrent(0);},[slides.length]);
+  useEffect(() => { if (current >= slides.length && slides.length > 0) setCurrent(0); }, [slides.length]);
 
   return (
     <div className="slideshow-wrap">
@@ -422,21 +417,18 @@ useEffect(()=>{
         <span style={{fontSize:10,color:"#333",fontFamily:"Orbitron"}}>{approved.length} FOTO{approved.length!==1?"S":""}</span>
       </div>
       <div className="slideshow-body">
-        {approved.length===0?(
+        {approved.length === 0 ? (
           <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:14,color:"#222"}}>
             <div style={{fontSize:44}}>📺</div>
             <div style={{fontFamily:"Orbitron",fontSize:11,letterSpacing:2}}>Esperando fotos aprobadas...</div>
           </div>
-        ) : slides[current]?.type==="qr" ? (
+        ) : slides[current]?.type === "qr" ? (
           <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",width:"100%",height:"100%",background:"#060810",gap:20}}>
             <img src="/nexoled_qr_pix.png" alt="QR" style={{width:"75%",maxWidth:280,borderRadius:16}}/>
             <div style={{color:"#00f5ff",fontFamily:"Orbitron",fontSize:14,letterSpacing:2,textAlign:"center"}}>¡SUBE TU FOTO!</div>
           </div>
         ) : (
-          <div key={current} style={{position:"relative",width:"100%",height:"100%",overflow:"hidden"}}>
-            <img src={slides[current]?.data?.url} alt="" style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover",filter:"blur(20px) brightness(0.4)",transform:"scale(1.1)"}} />
-            <img src={slides[current]?.data?.url} alt="" className="slideshow-img" />
-          </div>
+          <img key={current} src={slides[current]?.data?.url} alt="" className="slideshow-img"/>
         )}
       </div>
     </div>
@@ -523,20 +515,20 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
 
 export default function App() {
   const [view] = useState(getRoute);
-  const [evento,setEvento] = useState(null);
-  const [fotos,setFotos] = useState([]);
-  const [loading,setLoading] = useState(true);
+  const [evento, setEvento] = useState(null);
+  const [fotos, setFotos] = useState([]);
+  const [loading, setLoading] = useState(true);
   const eventoIdRef = useRef(null);
 
-const fetchFotos = useCallback(async (eventoId) => {
+  const fetchFotos = useCallback(async (eventoId) => {
     const {data:ft} = await supabase.from("fotos").select("*").eq("evento_id",eventoId).order("created_at",{ascending:false});
-    if(ft && ft.length > 0) setFotos(ft);
-  },[]);
+    if (ft && ft.length > 0) setFotos(ft);
+  }, []);
 
-  useEffect(()=>{
+  useEffect(() => {
     const init = async () => {
       const {data:ev} = await supabase.from("eventos").select("*").eq("activo",true).single();
-      if(ev){
+      if (ev) {
         setEvento(ev);
         eventoIdRef.current = ev.id;
         await fetchFotos(ev.id);
@@ -544,25 +536,32 @@ const fetchFotos = useCallback(async (eventoId) => {
       setLoading(false);
     };
     init();
-  },[fetchFotos]);
+  }, [fetchFotos]);
 
-useEffect(()=>{
-    if(!eventoIdRef.current || view === "pantalla") return;
+  // Pantalla usa polling cada 30s — operador/admin usan realtime
+  useEffect(() => {
+    if (!eventoIdRef.current) return;
     const id = eventoIdRef.current;
-    const channel = supabase.channel("fotos-"+id)
-      .on("postgres_changes",{event:"*",schema:"public",table:"fotos"},()=>fetchFotos(id))
-      .subscribe();
-    return()=>supabase.removeChannel(channel);
-  },[fetchFotos, view]);
 
-  if(view==="pantalla") return (
+    if (view === "pantalla") {
+      const t = setInterval(() => fetchFotos(id), 30000);
+      return () => clearInterval(t);
+    } else {
+      const channel = supabase.channel("fotos-" + id)
+        .on("postgres_changes", {event:"*", schema:"public", table:"fotos"}, () => fetchFotos(id))
+        .subscribe();
+      return () => supabase.removeChannel(channel);
+    }
+  }, [fetchFotos, view]);
+
+  if (view === "pantalla") return (
     <>
       <style>{css}</style>
       <ViewPantalla fotos={fotos}/>
     </>
   );
 
-  if(loading) return (
+  if (loading) return (
     <>
       <style>{css}</style>
       <BokehBg/>
