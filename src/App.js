@@ -549,14 +549,22 @@ export default function App() {
     init();
   },[fetchFotos]);
 
-  useEffect(()=>{
+useEffect(()=>{
     if(!eventoIdRef.current) return;
     const id = eventoIdRef.current;
-    const channel = supabase.channel("fotos-"+id)
-      .on("postgres_changes",{event:"*",schema:"public",table:"fotos"},()=>fetchFotos(id))
-      .subscribe();
-    return()=>supabase.removeChannel(channel);
-  },[fetchFotos]);
+
+    if(view === "pantalla") {
+      // Polling cada 15s para pantalla LED
+      const t = setInterval(()=>fetchFotos(id), 15000);
+      return()=>clearInterval(t);
+    } else {
+      // Realtime para operador y admin
+      const channel = supabase.channel("fotos-"+id)
+        .on("postgres_changes",{event:"*",schema:"public",table:"fotos"},()=>fetchFotos(id))
+        .subscribe();
+      return()=>supabase.removeChannel(channel);
+    }
+  },[fetchFotos, view]);
 
   if(view==="pantalla") return (
     <>
