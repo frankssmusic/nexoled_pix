@@ -439,7 +439,7 @@ function ViewPantalla({fotos}) {
             <div style={{color:"#00f5ff",fontFamily:"Orbitron",fontSize:14,letterSpacing:2,textAlign:"center"}}>¡SUBE TU FOTO!</div>
           </div>
         ) : (
-        <img key={current} src={slides[current]?.data?.url + "?v=" + Date.now()} alt="" className="slideshow-img"/>
+        <img key={current} src={slides[current]?.data?.url} alt="" className="slideshow-img"/>
         )}
       </div>
     </div>
