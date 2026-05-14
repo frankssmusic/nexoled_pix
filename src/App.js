@@ -550,21 +550,19 @@ export default function App() {
   },[fetchFotos]);
 
 useEffect(()=>{
-    if(!eventoIdRef.current) return;
+    if(!evento) return;
     const id = eventoIdRef.current;
 
     if(view === "pantalla") {
-      // Polling cada 15s para pantalla LED
       const t = setInterval(()=>fetchFotos(id), 15000);
       return()=>clearInterval(t);
     } else {
-      // Realtime para operador y admin
       const channel = supabase.channel("fotos-"+id)
         .on("postgres_changes",{event:"*",schema:"public",table:"fotos"},()=>fetchFotos(id))
         .subscribe();
       return()=>supabase.removeChannel(channel);
     }
-  },[fetchFotos, view]);
+  },[fetchFotos, view, evento]);
 
   if(view==="pantalla") return (
     <>
