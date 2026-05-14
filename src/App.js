@@ -149,13 +149,29 @@ function ViewAsistente({evento}) {
     reader.readAsDataURL(f);
   };
 
+const comprimirImagen = (file) => new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const MAX = 1080;
+      let w = img.width, h = img.height;
+      if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+      const canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(resolve, "image/jpeg", 0.82);
+    };
+    img.src = url;
+  });
+
   const handleSend = async () => {
     if(!file||!evento) return;
     setLoading(true);
     try {
-      const ext = file.name.split(".").pop();
-      const filename = `${Date.now()}.${ext}`;
-      const {error:uploadError} = await supabase.storage.from("fotos").upload(filename,file,{contentType:file.type});
+      const compressed = await comprimirImagen(file);
+      const filename = `${Date.now()}.jpg`;
+      const {error:uploadError} = await supabase.storage.from("fotos").upload(filename, compressed, {contentType:"image/jpeg"});
       if(uploadError) throw uploadError;
       const {data:urlData} = supabase.storage.from("fotos").getPublicUrl(filename);
       const {error:dbError} = await supabase.from("fotos").insert({evento_id:evento.id,url:urlData.publicUrl,status:"pending"});
