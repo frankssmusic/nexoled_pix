@@ -295,8 +295,18 @@ function ViewAsistente({evento}) {
 // VISTA OPERADOR (modera fotos + descarga)
 // =============================================
 function ViewOperador({evento,fotos,onRefreshFotos,onUpdateEvento}) {
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [registroStep, setRegistroStep] = useState("login"); // login | registro | panel
+  const [loggedIn, setLoggedIn] = useState(() => {
+    const saved = sessionStorage.getItem("op_auth");
+    if (!saved) return false;
+    const { ts } = JSON.parse(saved);
+    return Date.now() - ts < 8 * 60 * 60 * 1000; // 8 horas de sesión
+  });
+  const [registroStep, setRegistroStep] = useState(() => {
+    const saved = sessionStorage.getItem("op_auth");
+    if (!saved) return "login";
+    const { ts } = JSON.parse(saved);
+    return Date.now() - ts < 8 * 60 * 60 * 1000 ? "panel" : "login";
+  }); // login | registro | panel
   const [pass,setPass] = useState("");
   const [error,setError] = useState("");
   const [opNombre,setOpNombre] = useState("");
