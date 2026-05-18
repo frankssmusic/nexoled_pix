@@ -388,13 +388,31 @@ function ViewOperador({evento,fotos,onRefreshFotos,onUpdateEvento}) {
     else setError("Clave incorrecta");
   };
 
+  // Validar RUT chileno: formato XXXXXXXX-X y dígito verificador
+  const validarRut = (rut) => {
+    const clean = rut.replace(/\./g,"").trim();
+    if(!/^\d{7,8}-[\dkK]$/.test(clean)) return {ok:false,msg:"Formato inválido. Usa: 12345678-9 (sin puntos, con guión)"};
+    const [cuerpo, dv] = clean.split("-");
+    let suma = 0, mult = 2;
+    for(let i=cuerpo.length-1;i>=0;i--){
+      suma += parseInt(cuerpo[i]) * mult;
+      mult = mult === 7 ? 2 : mult + 1;
+    }
+    const dvEsperado = 11 - (suma % 11);
+    const dvCalc = dvEsperado === 11 ? "0" : dvEsperado === 10 ? "K" : String(dvEsperado);
+    if(dv.toUpperCase() !== dvCalc) return {ok:false,msg:"Dígito verificador incorrecto. Revisa tu RUT"};
+    return {ok:true,clean};
+  };
+
   const handleRegistro = async () => {
     if(!opNombre.trim()||!opRut.trim()){setError("Nombre y RUT son obligatorios");return;}
+    const rutCheck = validarRut(opRut);
+    if(!rutCheck.ok){setError(rutCheck.msg);return;}
     // Guardar operador en historial
     const {error:regError} = await supabase.from("operadores").insert({
       evento_id:evento.id,
       nombre:opNombre.trim(),
-      rut:opRut.trim()
+      rut:rutCheck.clean
     });
     if(regError){setError("Error al registrar. Intenta de nuevo.");return;}
     sessionStorage.setItem("op_auth", JSON.stringify({ ts: Date.now() }));
@@ -432,8 +450,9 @@ function ViewOperador({evento,fotos,onRefreshFotos,onUpdateEvento}) {
               <input className="input" placeholder="Ej: Juan Pérez González" value={opNombre} onChange={e=>setOpNombre(e.target.value)} />
             </div>
             <div>
-              <label className="field-label">RUT</label>
-              <input className="input" placeholder="Ej: 12.345.678-9" value={opRut} onChange={e=>setOpRut(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleRegistro()} />
+              <label className="field-label">RUT (sin puntos, con guión)</label>
+              <input className="input" placeholder="Ej: 12345678-9" value={opRut} onChange={e=>setOpRut(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleRegistro()} />
+              <div style={{fontSize:10,color:"#5a5f85",marginTop:4}}>Se valida formato y dígito verificador</div>
             </div>
           </div>
           {error&&<div style={{color:"#ff3355",fontSize:12,marginTop:8}}>{error}</div>}
@@ -604,6 +623,7 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
   const [eventoCerrado,setEventoCerrado] = useState(evento?.evento_cerrado||false);
   const [operadores,setOperadores] = useState([]);
   const [showOps,setShowOps] = useState(false);
+  const [selectedOps,setSelectedOps] = useState([]);
 
   // Sync state si evento cambia
   useEffect(()=>{
@@ -619,6 +639,40 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
     if(!evento) return;
     const {data} = await supabase.from("operadores").select("*").eq("evento_id",evento.id).order("created_at",{ascending:false});
     setOperadores(data||[]);
+    setSelectedOps([]);
+  };
+
+  const toggleSelectOp = (id) => setSelectedOps(s=>s.includes(id)?s.filter(x=>x!==id):[...s,id]);
+  const toggleAllOps = () => setSelectedOps(s=>s.length===operadores.length?[]:operadores.map(o=>o.id));
+
+  const deleteSelectedOps = async () => {
+    if(!selectedOps.length||!window.confirm(`¿Eliminar ${selectedOps.length} operador(es) del historial?`)) return;
+    await supabase.from("operadores").delete().in("id",selectedOps);
+    setToast(`🗑️ ${selectedOps.length} registro(s) eliminado(s)`);
+    setSelectedOps([]);
+    fetchOperadores();
+  };
+
+  const exportOperadoresExcel = async () => {
+    if(operadores.length===0){setToast("No hay operadores para exportar");return;}
+    try {
+      const XLSX = await import("https://cdn.jsdelivr.net/npm/xlsx@0.18.5/+esm");
+      const data = operadores.map(op=>({
+        Nombre: op.nombre,
+        RUT: op.rut,
+        Fecha: new Date(op.created_at).toLocaleDateString("es-CL",{day:"2-digit",month:"2-digit",year:"numeric"}),
+        Hora: new Date(op.created_at).toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit"}),
+        Evento: evento?.nombre || ""
+      }));
+      const ws = XLSX.utils.json_to_sheet(data);
+      ws["!cols"] = [{wch:25},{wch:14},{wch:12},{wch:8},{wch:25}];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Operadores");
+      XLSX.writeFile(wb, `operadores_${evento?.nombre||"evento"}.xlsx`);
+      setToast(`📊 ${operadores.length} registros exportados`);
+    } catch(e) {
+      setToast("❌ Error al exportar");
+    }
   };
 
   const handleSave = async () => {
@@ -764,7 +818,7 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
 
       {/* Historial de operadores */}
       <div className="card" style={{marginBottom:12}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10,flexWrap:"wrap",gap:8}}>
           <h3 className="section-title" style={{marginBottom:0}}>👤 Historial de operadores</h3>
           <button className="btn btn-sm btn-outline" onClick={()=>{setShowOps(!showOps);if(!showOps)fetchOperadores();}}>{showOps?"Ocultar":"Ver historial"}</button>
         </div>
@@ -772,19 +826,39 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
           operadores.length===0 ? (
             <div style={{textAlign:"center",color:"#5a5f85",padding:16,fontSize:13}}>No hay operadores registrados aún</div>
           ) : (
-            <div style={{display:"flex",flexDirection:"column",gap:6}}>
-              {operadores.map(op=>(
-                <div key={op.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 10px",background:"#060810",borderRadius:8,border:"1px solid #1a1d35"}}>
-                  <div>
-                    <div style={{fontSize:13,fontWeight:700,color:"#e8eaf6"}}>{op.nombre}</div>
-                    <div style={{fontSize:11,color:"#5a5f85"}}>RUT: {op.rut}</div>
+            <>
+              {/* Toolbar: seleccionar, eliminar, exportar */}
+              <div style={{display:"flex",gap:8,marginBottom:10,flexWrap:"wrap",alignItems:"center"}}>
+                <button className="btn btn-sm btn-outline" onClick={toggleAllOps}>{selectedOps.length===operadores.length?"Deseleccionar":"Seleccionar todo"}</button>
+                {selectedOps.length>0&&(
+                  <button className="btn btn-sm btn-danger" onClick={deleteSelectedOps}>🗑️ Eliminar ({selectedOps.length})</button>
+                )}
+                <button className="btn btn-sm btn-success" onClick={exportOperadoresExcel}>📊 Exportar Excel</button>
+              </div>
+              <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                {operadores.map(op=>(
+                  <div key={op.id} onClick={()=>toggleSelectOp(op.id)} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 10px",background:selectedOps.includes(op.id)?"#00f5ff10":"#060810",borderRadius:8,border:selectedOps.includes(op.id)?"1px solid #00f5ff55":"1px solid #1a1d35",cursor:"pointer",transition:"all 0.2s"}}>
+                    <div style={{display:"flex",alignItems:"center",gap:10}}>
+                      <div style={{width:20,height:20,borderRadius:4,border:selectedOps.includes(op.id)?"2px solid #00f5ff":"2px solid #333",background:selectedOps.includes(op.id)?"#00f5ff":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                        {selectedOps.includes(op.id)&&<span style={{fontSize:11,color:"#000",fontWeight:700}}>✓</span>}
+                      </div>
+                      <div>
+                        <div style={{fontSize:13,fontWeight:700,color:"#e8eaf6"}}>{op.nombre}</div>
+                        <div style={{fontSize:11,color:"#5a5f85"}}>RUT: {op.rut}</div>
+                      </div>
+                    </div>
+                    <div style={{textAlign:"right"}}>
+                      <div style={{fontSize:10,color:"#5a5f85",fontFamily:"Cossette Titre",letterSpacing:1}}>
+                        {new Date(op.created_at).toLocaleDateString("es-CL",{day:"2-digit",month:"short",year:"numeric"})}
+                      </div>
+                      <div style={{fontSize:9,color:"#444",fontFamily:"Cossette Texte"}}>
+                        {new Date(op.created_at).toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit"})}
+                      </div>
+                    </div>
                   </div>
-                  <div style={{fontSize:10,color:"#5a5f85",fontFamily:"Cossette Titre",letterSpacing:1}}>
-                    {new Date(op.created_at).toLocaleDateString("es-CL",{day:"2-digit",month:"short",year:"numeric"})}
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </>
           )
         )}
       </div>
