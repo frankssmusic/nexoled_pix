@@ -390,6 +390,31 @@ function ViewOperador({evento,fotos,onRefreshFotos,onUpdateEvento}) {
   const [downloading,setDownloading] = useState(false);
   const [editMensaje,setEditMensaje] = useState(evento?.mensaje_subida || "SUBIR FOTO");
   const [mensajeGuardado,setMensajeGuardado] = useState(true);
+  const [showOpTerms,setShowOpTerms] = useState(false);
+
+  const opTermsText = `TÉRMINOS Y CONDICIONES PARA OPERADORES — NEXOPIX
+
+Al registrarse como operador de un evento NexoPix, usted declara conocer y aceptar las siguientes condiciones:
+
+1. RESPONSABILIDAD DE MODERACIÓN
+Como operador, usted es el responsable directo de aprobar o rechazar las fotografías subidas por los asistentes al evento. Debe rechazar toda imagen que contenga contenido sexual, explícito o inapropiado; imágenes que involucren a menores de edad en contextos inadecuados; contenido que atente contra la moral, honra o dignidad de cualquier persona; imágenes de figuras públicas sin su consentimiento; o cualquier contenido que pueda constituir delito según la legislación chilena.
+
+2. REGISTRO DE IDENTIDAD
+Su nombre y RUT quedan registrados como respaldo legal del evento. Esta información podrá ser utilizada como antecedente en caso de que se expongan fotografías constituyentes de delito o que generen perjuicio a terceros.
+
+3. DESCARGA DE FOTOGRAFÍAS
+Si el administrador habilita la descarga, usted dispone de un plazo máximo de 24 horas desde la finalización del evento para descargar las fotos. Se recomienda realizar la descarga antes del cierre del evento. NexoPix no garantiza la disponibilidad posterior.
+
+4. USO DE IMÁGENES
+NexoPix y NexoLED podrán utilizar las fotografías aprobadas durante su operación con fines promocionales, previo acuerdo con el cliente contratante.
+
+5. ACCIONES LEGALES
+NexoPix se reserva el derecho de iniciar acciones legales contra el operador registrado si se demuestra negligencia en la moderación de contenido que resulte en la exhibición de material ilegal o perjudicial, pudiendo entregar los antecedentes a las autoridades competentes.
+
+6. LEGISLACIÓN APLICABLE
+Estos términos se rigen por las leyes de la República de Chile, bajo la jurisdicción de los tribunales ordinarios de Punta Arenas.
+
+Última actualización: Mayo 2026`;
 
   const pending = fotos.filter(p=>p.status==="pending");
   const visible = fotos.filter(p=>p.status===filter);
@@ -449,13 +474,13 @@ function ViewOperador({evento,fotos,onRefreshFotos,onUpdateEvento}) {
     if(evento.evento_cerrado){setError("Evento cerrado. Contacta al administrador.");return;}
     if(pass===evento.clave_operador||pass===ADMIN_PASSWORD){
       setError("");
-      // Si es admin, saltar registro
+      // Si es admin, saltar registro y terms
       if(pass===ADMIN_PASSWORD){
         sessionStorage.setItem("op_auth", JSON.stringify({ ts: Date.now(), sv: evento.session_version||1 }));
         setLoggedIn(true);
         setRegistroStep("panel");
       } else {
-        setRegistroStep("registro");
+        setRegistroStep("terms");
       }
     }
     else setError("Clave incorrecta");
@@ -507,6 +532,43 @@ function ViewOperador({evento,fotos,onRefreshFotos,onUpdateEvento}) {
         </div>
       </div>
     </div>
+  );
+
+  // Términos del operador
+  if(!loggedIn && registroStep === "terms") return (
+    <>
+      {showOpTerms && (
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.9)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={()=>setShowOpTerms(false)}>
+          <div style={{width:"100%",maxWidth:480,maxHeight:"85vh",background:"#131628",border:"1px solid #1a1d35",borderRadius:14,overflow:"hidden",display:"flex",flexDirection:"column"}} onClick={e=>e.stopPropagation()}>
+            <div style={{padding:"16px 20px",borderBottom:"1px solid #1a1d35",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <span className="tag tag-magenta">DOCUMENTO LEGAL — OPERADOR</span>
+              <button style={{background:"none",border:"none",color:"#5a5f85",fontSize:20,cursor:"pointer",padding:4}} onClick={()=>setShowOpTerms(false)}>✕</button>
+            </div>
+            <div style={{padding:"20px",overflowY:"auto",flex:1}}>
+              <pre style={{fontFamily:"Cossette Texte",fontSize:12,color:"#c0c4e0",lineHeight:1.7,whiteSpace:"pre-wrap",wordBreak:"break-word",margin:0}}>{opTermsText}</pre>
+            </div>
+          </div>
+        </div>
+      )}
+      <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+        <div style={{width:"100%",maxWidth:360,animation:"fadeInUp 0.4s ease"}}>
+          <div className="card" style={{textAlign:"center"}}>
+            <div style={{fontSize:36,marginBottom:10}}>⚖️</div>
+            <span className="tag tag-magenta">ANTES DE CONTINUAR</span>
+            <h2 style={{fontFamily:"Cossette Titre",fontWeight:700,fontSize:17,marginTop:8,marginBottom:10,color:"#fff"}}>Responsabilidad del operador</h2>
+            <p style={{color:"#8890c0",fontSize:12,lineHeight:1.6,marginBottom:12,textAlign:"left"}}>
+              Como operador, eres responsable de moderar las fotos del evento. Debes rechazar contenido sexual, explícito, que involucre menores, o que dañe la honra de cualquier persona. Tu nombre y RUT quedan registrados como respaldo legal.
+            </p>
+            <p style={{color:"#8890c0",fontSize:12,lineHeight:1.6,marginBottom:16,textAlign:"left"}}>
+              NexoPix se reserva el derecho de iniciar acciones legales en caso de negligencia en la moderación.
+            </p>
+            <button style={{background:"none",border:"none",color:"#00f5ff",fontSize:12,cursor:"pointer",marginBottom:18,textDecoration:"underline",fontFamily:"Cossette Texte",fontWeight:700}} onClick={()=>setShowOpTerms(true)}>Leer términos completos</button>
+            <button className="btn btn-cyan" style={{width:"100%"}} onClick={()=>setRegistroStep("registro")}>Acepto las condiciones</button>
+            <button className="btn btn-outline" style={{width:"100%",marginTop:8}} onClick={()=>{setRegistroStep("login");setPass("");setError("");}}>← Volver</button>
+          </div>
+        </div>
+      </div>
+    </>
   );
 
   // Registro de operador
