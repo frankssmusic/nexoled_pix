@@ -255,6 +255,22 @@ Estos términos se rigen por las leyes de la República de Chile. Para cualquier
   );
 
   return (
+    <>
+      {/* Modal de términos completos — fuera del contenedor principal */}
+      {showTermsDetail && (
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.9)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={()=>setShowTermsDetail(false)}>
+          <div style={{width:"100%",maxWidth:480,maxHeight:"85vh",background:"#131628",border:"1px solid #1a1d35",borderRadius:14,overflow:"hidden",display:"flex",flexDirection:"column"}} onClick={e=>e.stopPropagation()}>
+            <div style={{padding:"16px 20px",borderBottom:"1px solid #1a1d35",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <span className="tag tag-magenta">DOCUMENTO LEGAL</span>
+              <button style={{background:"none",border:"none",color:"#5a5f85",fontSize:20,cursor:"pointer",padding:4}} onClick={()=>setShowTermsDetail(false)}>✕</button>
+            </div>
+            <div style={{padding:"20px",overflowY:"auto",flex:1}}>
+              <pre style={{fontFamily:"Cossette Texte",fontSize:12,color:"#c0c4e0",lineHeight:1.7,whiteSpace:"pre-wrap",wordBreak:"break-word",margin:0}}>{termsText}</pre>
+            </div>
+          </div>
+        </div>
+      )}
+
     <div style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"16px 12px 32px"}}>
       <div style={{width:"100%",maxWidth:420}}>
         <div className="asistente-header">
@@ -263,21 +279,6 @@ Estos términos se rigen por las leyes de la República de Chile. Para cualquier
           </div>
           <div className="evento-nombre">{evento.nombre}</div>
         </div>
-
-        {/* Modal de términos completos */}
-        {showTermsDetail && (
-          <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.85)",zIndex:100,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={()=>setShowTermsDetail(false)}>
-            <div style={{width:"100%",maxWidth:480,maxHeight:"85vh",background:"#131628",border:"1px solid #1a1d35",borderRadius:14,overflow:"hidden",display:"flex",flexDirection:"column"}} onClick={e=>e.stopPropagation()}>
-              <div style={{padding:"16px 20px",borderBottom:"1px solid #1a1d35",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                <span className="tag tag-magenta">DOCUMENTO LEGAL</span>
-                <button style={{background:"none",border:"none",color:"#5a5f85",fontSize:20,cursor:"pointer",padding:4}} onClick={()=>setShowTermsDetail(false)}>✕</button>
-              </div>
-              <div style={{padding:"20px",overflowY:"auto",flex:1}}>
-                <pre style={{fontFamily:"Cossette Texte",fontSize:12,color:"#c0c4e0",lineHeight:1.7,whiteSpace:"pre-wrap",wordBreak:"break-word",margin:0}}>{termsText}</pre>
-              </div>
-            </div>
-          </div>
-        )}
 
         {step === "terms" && (
           <div style={{animation:"fadeInUp 0.4s ease"}}>
@@ -354,6 +355,7 @@ Estos términos se rigen por las leyes de la República de Chile. Para cualquier
         )}
       </div>
     </div>
+    </>
   );
 }
 
@@ -364,14 +366,19 @@ function ViewOperador({evento,fotos,onRefreshFotos,onUpdateEvento}) {
   const [loggedIn, setLoggedIn] = useState(() => {
     const saved = sessionStorage.getItem("op_auth");
     if (!saved) return false;
-    const { ts } = JSON.parse(saved);
-    return Date.now() - ts < 8 * 60 * 60 * 1000; // 8 horas de sesión
+    const { ts, sv } = JSON.parse(saved);
+    if (Date.now() - ts > 8 * 60 * 60 * 1000) return false;
+    // Check session version matches event
+    if (evento && sv !== evento.session_version) return false;
+    return true;
   });
   const [registroStep, setRegistroStep] = useState(() => {
     const saved = sessionStorage.getItem("op_auth");
     if (!saved) return "login";
-    const { ts } = JSON.parse(saved);
-    return Date.now() - ts < 8 * 60 * 60 * 1000 ? "panel" : "login";
+    const { ts, sv } = JSON.parse(saved);
+    if (Date.now() - ts > 8 * 60 * 60 * 1000) return "login";
+    if (evento && sv !== evento.session_version) return "login";
+    return "panel";
   }); // login | registro | panel
   const [pass,setPass] = useState("");
   const [error,setError] = useState("");
@@ -444,7 +451,7 @@ function ViewOperador({evento,fotos,onRefreshFotos,onUpdateEvento}) {
       setError("");
       // Si es admin, saltar registro
       if(pass===ADMIN_PASSWORD){
-        sessionStorage.setItem("op_auth", JSON.stringify({ ts: Date.now() }));
+        sessionStorage.setItem("op_auth", JSON.stringify({ ts: Date.now(), sv: evento.session_version||1 }));
         setLoggedIn(true);
         setRegistroStep("panel");
       } else {
@@ -481,7 +488,7 @@ function ViewOperador({evento,fotos,onRefreshFotos,onUpdateEvento}) {
       rut:rutCheck.clean
     });
     if(regError){setError("Error al registrar. Intenta de nuevo.");return;}
-    sessionStorage.setItem("op_auth", JSON.stringify({ ts: Date.now() }));
+    sessionStorage.setItem("op_auth", JSON.stringify({ ts: Date.now(), sv: evento.session_version||1 }));
     setLoggedIn(true);
     setRegistroStep("panel");
   };
@@ -690,6 +697,9 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
   const [operadores,setOperadores] = useState([]);
   const [showOps,setShowOps] = useState(false);
   const [selectedOps,setSelectedOps] = useState([]);
+  const [eventosHist,setEventosHist] = useState([]);
+  const [showHist,setShowHist] = useState(false);
+  const [creatingEvento,setCreatingEvento] = useState(false);
 
   // Sync state si evento cambia
   useEffect(()=>{
@@ -706,6 +716,11 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
     const {data} = await supabase.from("operadores").select("*").eq("evento_id",evento.id).order("created_at",{ascending:false});
     setOperadores(data||[]);
     setSelectedOps([]);
+  };
+
+  const fetchEventosHistorial = async () => {
+    const {data} = await supabase.from("eventos").select("*").eq("activo",false).order("created_at",{ascending:false});
+    setEventosHist(data||[]);
   };
 
   const toggleSelectOp = (id) => setSelectedOps(s=>s.includes(id)?s.filter(x=>x!==id):[...s,id]);
@@ -767,22 +782,21 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
     let updates = {evento_cerrado:newVal};
 
     if(newVal) {
-      // Al cerrar: desactivar descarga también
       updates.descarga_habilitada = false;
+      updates.session_version = (evento.session_version||1) + 1;
     } else {
-      // Al reabrir: generar nueva clave, desactivar descarga
       const nuevaClave = Math.random().toString(36).slice(2,8);
       updates.clave_operador = nuevaClave;
       updates.descarga_habilitada = false;
+      updates.session_version = (evento.session_version||1) + 1;
       setEditClave(nuevaClave);
     }
 
     const {error:err} = await supabase.from("eventos").update(updates).eq("id",evento.id);
     if(err){setToast("❌ Error");return;}
     setEventoCerrado(newVal);
-    if(!newVal) setDescargaHabilitada(false);
-    else setDescargaHabilitada(false);
-    setToast(newVal?"🔒 Evento cerrado — clave expirada":"🔓 Evento reabierto — nueva clave generada");
+    setDescargaHabilitada(false);
+    setToast(newVal?"🔒 Evento cerrado — sesiones expiradas":"🔓 Evento reabierto — nueva clave generada");
     onUpdateEvento({...evento,...updates});
   };
 
@@ -795,6 +809,91 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
     }
     await supabase.from("fotos").delete().eq("evento_id",evento.id);
     setToast("🗑️ Evento limpiado");onRefreshFotos();
+  };
+
+  // CREAR NUEVO EVENTO
+  const handleCrearEvento = async () => {
+    if(!evento) return;
+    if(!evento.evento_cerrado){setToast("⚠️ Cierra el evento actual antes de crear uno nuevo");return;}
+    if(!window.confirm("¿Crear un nuevo evento? El evento actual pasará al historial.")) return;
+    setCreatingEvento(true);
+    try {
+      // 1. Desactivar evento actual (pasa al historial)
+      await supabase.from("eventos").update({activo:false}).eq("id",evento.id);
+
+      // 2. Crear nuevo evento
+      const nuevaClave = Math.random().toString(36).slice(2,8);
+      const {data:nuevoEvento,error:createErr} = await supabase.from("eventos").insert({
+        nombre:"TU EVENTO",
+        clave_operador:nuevaClave,
+        activo:true,
+        evento_cerrado:false,
+        descarga_habilitada:false,
+        mensaje_subida:"SUBIR FOTO",
+        session_version:1
+      }).select().single();
+
+      if(createErr) throw createErr;
+
+      // 3. Actualizar estado local
+      setEditNombre("TU EVENTO");
+      setEditClave(nuevaClave);
+      setEditMensaje("SUBIR FOTO");
+      setDescargaHabilitada(false);
+      setEventoCerrado(false);
+      onUpdateEvento(nuevoEvento);
+      onRefreshFotos();
+      setToast("🎉 Nuevo evento creado — configura el nombre y la clave");
+    } catch(e) {
+      setToast("❌ Error al crear evento");
+    } finally {
+      setCreatingEvento(false);
+    }
+  };
+
+  // DESCARGAR FOTOS DE EVENTO DEL HISTORIAL
+  const handleDownloadHistFotos = async (hist) => {
+    const {data:fotosHist} = await supabase.from("fotos").select("*").eq("evento_id",hist.id).eq("status","approved");
+    if(!fotosHist||fotosHist.length===0){setToast("No hay fotos aprobadas en ese evento");return;}
+    setToast("📦 Preparando descarga...");
+    try {
+      const JSZip = (await import("https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm")).default;
+      const zip = new JSZip();
+      for(let i=0;i<fotosHist.length;i++){
+        const resp = await fetch(fotosHist[i].url);
+        const blob = await resp.blob();
+        zip.file(`foto_${i+1}.jpg`, blob);
+      }
+      const content = await zip.generateAsync({type:"blob"});
+      const url = URL.createObjectURL(content);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${hist.nombre||"evento"}_fotos.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setToast(`📦 ${fotosHist.length} fotos descargadas`);
+    } catch(e) {
+      setToast("❌ Error al descargar");
+    }
+  };
+
+  // ELIMINAR EVENTO DEL HISTORIAL (con sus fotos)
+  const handleDeleteHistEvento = async (hist) => {
+    if(!window.confirm(`¿Eliminar "${hist.nombre}" y todas sus fotos permanentemente?`)) return;
+    // Borrar fotos del storage
+    const {data:fotosHist} = await supabase.from("fotos").select("url").eq("evento_id",hist.id);
+    if(fotosHist){
+      const paths = fotosHist.map(f=>f.url.split("/fotos/")[1]).filter(Boolean);
+      if(paths.length) await supabase.storage.from("fotos").remove(paths);
+    }
+    // Borrar fotos de la DB
+    await supabase.from("fotos").delete().eq("evento_id",hist.id);
+    // Borrar operadores del evento
+    await supabase.from("operadores").delete().eq("evento_id",hist.id);
+    // Borrar evento
+    await supabase.from("eventos").delete().eq("id",hist.id);
+    setToast(`🗑️ "${hist.nombre}" eliminado`);
+    fetchEventosHistorial();
   };
 
   if(!loggedIn) return (
@@ -832,6 +931,13 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
             <div key={l} className="stat-card"><div className="stat-val" style={{color:c,fontSize:20}}>{v}</div><div className="stat-label">{l}</div></div>
           ))}
         </div>
+
+        {/* Botón crear nuevo evento — solo visible cuando evento está cerrado */}
+        {eventoCerrado && (
+          <button className="btn btn-magenta" style={{width:"100%",marginTop:14}} onClick={handleCrearEvento} disabled={creatingEvento}>
+            {creatingEvento?"Creando...":"✨ CREAR NUEVO EVENTO"}
+          </button>
+        )}
       </div>
 
       {/* Configuración del evento */}
@@ -877,7 +983,7 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
 
         {eventoCerrado && (
           <div style={{marginTop:12,padding:10,background:"#ff335510",border:"1px solid #ff335533",borderRadius:8,fontSize:12,color:"#ff9999",lineHeight:1.6}}>
-            ⚠️ Evento cerrado. Los asistentes no pueden subir fotos y la clave del operador está expirada. Al reabrir se generará una nueva clave automáticamente.
+            ⚠️ Evento cerrado. Los asistentes no pueden subir fotos y las sesiones de operadores están expiradas. Puedes crear un nuevo evento arriba o reabrir este.
           </div>
         )}
       </div>
@@ -893,7 +999,6 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
             <div style={{textAlign:"center",color:"#5a5f85",padding:16,fontSize:13}}>No hay operadores registrados aún</div>
           ) : (
             <>
-              {/* Toolbar: seleccionar, eliminar, exportar */}
               <div style={{display:"flex",gap:8,marginBottom:10,flexWrap:"wrap",alignItems:"center"}}>
                 <button className="btn btn-sm btn-outline" onClick={toggleAllOps}>{selectedOps.length===operadores.length?"Deseleccionar":"Seleccionar todo"}</button>
                 {selectedOps.length>0&&(
@@ -929,10 +1034,43 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
         )}
       </div>
 
+      {/* Historial de eventos */}
+      <div className="card" style={{marginBottom:12}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10,flexWrap:"wrap",gap:8}}>
+          <h3 className="section-title" style={{marginBottom:0}}>📁 Historial de eventos</h3>
+          <button className="btn btn-sm btn-outline" onClick={()=>{setShowHist(!showHist);if(!showHist)fetchEventosHistorial();}}>{showHist?"Ocultar":"Ver historial"}</button>
+        </div>
+        {showHist && (
+          eventosHist.length===0 ? (
+            <div style={{textAlign:"center",color:"#5a5f85",padding:16,fontSize:13}}>No hay eventos anteriores</div>
+          ) : (
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {eventosHist.map(hist=>(
+                <div key={hist.id} style={{padding:"12px",background:"#060810",borderRadius:10,border:"1px solid #1a1d35"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+                    <div>
+                      <div style={{fontSize:14,fontWeight:700,color:"#e8eaf6",fontFamily:"Cossette Titre"}}>{hist.nombre}</div>
+                      <div style={{fontSize:10,color:"#5a5f85",marginTop:2}}>
+                        Creado: {new Date(hist.created_at).toLocaleDateString("es-CL",{day:"2-digit",month:"short",year:"numeric"})}
+                      </div>
+                    </div>
+                    <span className="badge badge-rejected">CERRADO</span>
+                  </div>
+                  <div style={{display:"flex",gap:6}}>
+                    <button className="btn btn-sm btn-cyan" style={{flex:1,fontSize:10}} onClick={()=>handleDownloadHistFotos(hist)}>📥 Descargar fotos</button>
+                    <button className="btn btn-sm btn-danger" style={{flex:1,fontSize:10}} onClick={()=>handleDeleteHistEvento(hist)}>🗑️ Eliminar</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        )}
+      </div>
+
       {/* Acciones peligrosas */}
       <div className="card">
         <h3 className="section-title">🛠️ Acciones</h3>
-        <button className="btn btn-danger btn-sm" style={{width:"100%"}} onClick={handleClear}>🗑️ Borrar todas las fotos del evento</button>
+        <button className="btn btn-danger btn-sm" style={{width:"100%"}} onClick={handleClear}>🗑️ Borrar todas las fotos del evento actual</button>
         <div style={{marginTop:12,padding:10,background:"#060810",borderRadius:8,fontSize:11,color:"#5a5f85",lineHeight:1.8}}>
           <strong style={{color:"#e8eaf6",fontFamily:"Cossette Texte"}}>URLs</strong><br/>
           Asistente: <span style={{color:"#00f5ff",fontFamily:"Cossette Titre",fontSize:9}}>pix.nexoled.cl</span><br/>
@@ -960,6 +1098,15 @@ export default function App() {
     const {data:ft} = await supabase.from("fotos").select("*").eq("evento_id",eventoId).order("created_at",{ascending:false});
     setFotos(ft||[]);
   },[]);
+
+  // Wrapper que actualiza evento Y sincroniza eventoIdRef + fotos si cambió el ID
+  const handleUpdateEvento = useCallback((newEvento) => {
+    setEvento(newEvento);
+    if(newEvento && newEvento.id !== eventoIdRef.current) {
+      eventoIdRef.current = newEvento.id;
+      fetchFotos(newEvento.id);
+    }
+  },[fetchFotos]);
 
   useEffect(()=>{
     const init = async () => {
@@ -1013,8 +1160,8 @@ export default function App() {
       <BokehBg/>
       <div className="app-wrap">
         {view==="asistente"&&<ViewAsistente evento={evento}/>}
-        {view==="operador"&&<ViewOperador evento={evento} fotos={fotos} onRefreshFotos={()=>fetchFotos(eventoIdRef.current)} onUpdateEvento={setEvento}/>}
-        {view==="admin"&&<ViewAdmin evento={evento} fotos={fotos} onRefreshFotos={()=>fetchFotos(eventoIdRef.current)} onUpdateEvento={setEvento}/>}
+        {view==="operador"&&<ViewOperador evento={evento} fotos={fotos} onRefreshFotos={()=>fetchFotos(eventoIdRef.current)} onUpdateEvento={handleUpdateEvento}/>}
+        {view==="admin"&&<ViewAdmin evento={evento} fotos={fotos} onRefreshFotos={()=>fetchFotos(eventoIdRef.current)} onUpdateEvento={handleUpdateEvento}/>}
       </div>
     </>
   );
