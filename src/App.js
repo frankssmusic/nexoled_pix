@@ -147,14 +147,11 @@ function Logo({size=20}) {
 // VISTA ASISTENTE (público — sube fotos)
 // =============================================
 function ViewAsistente({evento}) {
-  const [step,setStep] = useState(() => {
-    const accepted = sessionStorage.getItem("nexopix_terms");
-    return accepted ? "upload" : "terms";
-  });
+  const [step,setStep] = useState("upload");
   const [preview,setPreview] = useState(null);
   const [file,setFile] = useState(null);
   const [loading,setLoading] = useState(false);
-  const [showTermsDetail,setShowTermsDetail] = useState(false);
+  const [autorizada,setAutorizada] = useState(true);
   const fileRef = useRef();
 
   const mensajeSubida = evento?.mensaje_subida || "SUBIR FOTO";
@@ -192,7 +189,7 @@ function ViewAsistente({evento}) {
       const {error:uploadError} = await supabase.storage.from("fotos").upload(filename, compressed, {contentType:"image/jpeg"});
       if(uploadError) throw uploadError;
       const {data:urlData} = supabase.storage.from("fotos").getPublicUrl(filename);
-      const {error:dbError} = await supabase.from("fotos").insert({evento_id:evento.id,url:urlData.publicUrl,status:"pending"});
+      const {error:dbError} = await supabase.from("fotos").insert({evento_id:evento.id,url:urlData.publicUrl,status:"pending",autorizada});
       if(dbError) throw dbError;
       setStep("sent");
     } catch(e) {
@@ -202,38 +199,7 @@ function ViewAsistente({evento}) {
     }
   };
 
-  const reset = () => {setStep("upload");setPreview(null);setFile(null);};
-
-  const handleAcceptTerms = () => {
-    sessionStorage.setItem("nexopix_terms","1");
-    setStep("upload");
-  };
-
-  const termsText = `TÉRMINOS Y CONDICIONES DE USO — NEXOPIX
-
-Al utilizar el servicio NexoPix para subir fotografías, usted declara conocer y aceptar las siguientes condiciones:
-
-1. USO DE IMÁGENES CON FINES PUBLICITARIOS
-NexoPix y NexoLED podrán utilizar las fotografías subidas a través de esta plataforma con fines promocionales y publicitarios, previo acuerdo con el operador o cliente contratante del servicio. La aceptación de estos términos constituye consentimiento para dicho uso.
-
-2. DESCARGA DE FOTOGRAFÍAS
-En caso de que el cliente acceda al servicio de descarga de fotos, dispondrá de un plazo máximo de 24 horas desde la finalización del evento para solicitar la descarga. Se recomienda solicitar la descarga al operador una vez concluido el evento. Transcurrido el plazo, NexoPix no garantiza la disponibilidad de las fotografías.
-
-3. CONTENIDO PROHIBIDO Y RESPONSABILIDAD
-NexoPix no se hace responsable por fotografías que contengan contenido que atente contra la moral, la honra o la dignidad de los asistentes, figuras públicas o terceros; contenido de naturaleza sexual, explícita o inapropiada; imágenes que involucren a menores de edad en contextos inadecuados; o cualquier contenido que pueda constituir delito según la legislación chilena vigente.
-
-Para prevenir lo anterior, el operador o responsable del evento ha sido autorizado para aprobar o rechazar cada fotografía antes de su exhibición, según los criterios aquí descritos.
-
-4. REGISTRO DE OPERADORES Y ACCIONES LEGALES
-Cada operador queda registrado con su nombre y RUT al acceder al panel de moderación. NexoPix se reserva el derecho de iniciar acciones legales si cualquier registro del evento fuese constituyente de delito o infracción legal, pudiendo colaborar con las autoridades competentes y entregar los antecedentes recopilados.
-
-5. PROPIEDAD INTELECTUAL
-Las fotografías subidas son propiedad de sus autores. Al subirlas, el usuario otorga a NexoPix una licencia no exclusiva para su exhibición durante el evento y eventual uso promocional conforme al punto 1.
-
-6. LEGISLACIÓN APLICABLE
-Estos términos se rigen por las leyes de la República de Chile. Para cualquier controversia, las partes se someten a la jurisdicción de los tribunales ordinarios de Punta Arenas.
-
-Última actualización: Mayo 2026`;
+  const reset = () => {setStep("upload");setPreview(null);setFile(null);setAutorizada(true);};
 
   const Banner = () => (
     <a href="https://nexoled.vercel.app" target="_blank" rel="noreferrer" style={{textDecoration:"none",display:"block",marginTop:16}}>
@@ -255,22 +221,6 @@ Estos términos se rigen por las leyes de la República de Chile. Para cualquier
   );
 
   return (
-    <>
-      {/* Modal de términos completos — fuera del contenedor principal */}
-      {showTermsDetail && (
-        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.9)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:16}} onClick={()=>setShowTermsDetail(false)}>
-          <div style={{width:"100%",maxWidth:480,maxHeight:"85vh",background:"#131628",border:"1px solid #1a1d35",borderRadius:14,overflow:"hidden",display:"flex",flexDirection:"column"}} onClick={e=>e.stopPropagation()}>
-            <div style={{padding:"16px 20px",borderBottom:"1px solid #1a1d35",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-              <span className="tag tag-magenta">DOCUMENTO LEGAL</span>
-              <button style={{background:"none",border:"none",color:"#5a5f85",fontSize:20,cursor:"pointer",padding:4}} onClick={()=>setShowTermsDetail(false)}>✕</button>
-            </div>
-            <div style={{padding:"20px",overflowY:"auto",flex:1}}>
-              <pre style={{fontFamily:"Cossette Texte",fontSize:12,color:"#c0c4e0",lineHeight:1.7,whiteSpace:"pre-wrap",wordBreak:"break-word",margin:0}}>{termsText}</pre>
-            </div>
-          </div>
-        </div>
-      )}
-
     <div style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"16px 12px 32px"}}>
       <div style={{width:"100%",maxWidth:420}}>
         <div className="asistente-header">
@@ -279,22 +229,6 @@ Estos términos se rigen por las leyes de la República de Chile. Para cualquier
           </div>
           <div className="evento-nombre">{evento.nombre}</div>
         </div>
-
-        {step === "terms" && (
-          <div style={{animation:"fadeInUp 0.4s ease"}}>
-            <div className="card" style={{textAlign:"center"}}>
-              <div style={{fontSize:36,marginBottom:10}}>📋</div>
-              <span className="tag">ANTES DE CONTINUAR</span>
-              <h2 style={{fontFamily:"Cossette Titre",fontWeight:700,fontSize:17,marginTop:8,marginBottom:10,color:"#fff"}}>Condiciones de uso</h2>
-              <p style={{color:"#8890c0",fontSize:12,lineHeight:1.6,marginBottom:16,textAlign:"left"}}>
-                Al subir una foto aceptas que NexoPix pueda usarla con fines promocionales (previo acuerdo con el cliente); que el operador modera el contenido exhibido; y que NexoPix no se responsabiliza por contenido inapropiado, reservándose acciones legales si corresponde.
-              </p>
-              <button style={{background:"none",border:"none",color:"#00f5ff",fontSize:12,cursor:"pointer",marginBottom:18,textDecoration:"underline",fontFamily:"Cossette Texte",fontWeight:700}} onClick={()=>setShowTermsDetail(true)}>Leer términos completos</button>
-              <button className="btn btn-cyan" style={{width:"100%"}} onClick={handleAcceptTerms}>Acepto las condiciones</button>
-            </div>
-            <Banner />
-          </div>
-        )}
 
         {step === "upload" && (
           <div style={{animation:"fadeInUp 0.4s ease"}}>
@@ -332,6 +266,15 @@ Estos términos se rigen por las leyes de la República de Chile. Para cualquier
               <span className="tag">PREVISUALIZACIÓN</span>
               <h2 style={{fontFamily:"Cossette Titre",fontWeight:700,fontSize:16,marginTop:6,marginBottom:12,color:"#fff"}}>¿Lista para enviar?</h2>
               <img src={preview} alt="" style={{width:"100%",borderRadius:10,aspectRatio:"4/3",objectFit:"cover",marginBottom:14,border:"1px solid #1a1d35"}} />
+
+              {/* Toggle autorización publicitaria */}
+              <div onClick={()=>setAutorizada(!autorizada)} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",marginBottom:12,cursor:"pointer",userSelect:"none"}}>
+                <div style={{width:22,height:22,borderRadius:5,border:autorizada?"2px solid #00f5ff":"2px solid #333",background:autorizada?"#00f5ff":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.2s"}}>
+                  {autorizada&&<span style={{fontSize:13,color:"#000",fontWeight:700}}>✓</span>}
+                </div>
+                <span style={{fontSize:12,color:"#8890c0",lineHeight:1.4}}>Autorizo a NexoPix a utilizar esta foto con fines publicitarios</span>
+              </div>
+
               <div style={{display:"flex",gap:10}}>
                 <button className="btn btn-outline" style={{flex:1}} onClick={reset} disabled={loading}>Cambiar</button>
                 <button className="btn btn-cyan" style={{flex:1}} onClick={handleSend} disabled={loading}>{loading?"Enviando...":"Enviar ✨"}</button>
@@ -355,7 +298,6 @@ Estos términos se rigen por las leyes de la República de Chile. Para cualquier
         )}
       </div>
     </div>
-    </>
   );
 }
 
@@ -452,7 +394,8 @@ Estos términos se rigen por las leyes de la República de Chile, bajo la jurisd
       for(let i=0;i<approved.length;i++){
         const resp = await fetch(approved[i].url);
         const blob = await resp.blob();
-        zip.file(`foto_${i+1}.jpg`, blob);
+        const suffix = approved[i].autorizada === false ? "_NO_AUTORIZADA" : "";
+        zip.file(`foto_${i+1}${suffix}.jpg`, blob);
       }
       const content = await zip.generateAsync({type:"blob"});
       const url = URL.createObjectURL(content);
@@ -924,7 +867,8 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
       for(let i=0;i<fotosHist.length;i++){
         const resp = await fetch(fotosHist[i].url);
         const blob = await resp.blob();
-        zip.file(`foto_${i+1}.jpg`, blob);
+        const suffix = fotosHist[i].autorizada === false ? "_NO_AUTORIZADA" : "";
+        zip.file(`foto_${i+1}${suffix}.jpg`, blob);
       }
       const content = await zip.generateAsync({type:"blob"});
       const url = URL.createObjectURL(content);
