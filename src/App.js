@@ -310,7 +310,6 @@ function ViewOperador({evento,fotos,onRefreshFotos,onUpdateEvento}) {
     if (!saved) return false;
     const { ts, sv } = JSON.parse(saved);
     if (Date.now() - ts > 8 * 60 * 60 * 1000) return false;
-    // Check session version matches event
     if (evento && sv !== evento.session_version) return false;
     return true;
   });
@@ -321,7 +320,7 @@ function ViewOperador({evento,fotos,onRefreshFotos,onUpdateEvento}) {
     if (Date.now() - ts > 8 * 60 * 60 * 1000) return "login";
     if (evento && sv !== evento.session_version) return "login";
     return "panel";
-  }); // login | registro | panel
+  });
   const [pass,setPass] = useState("");
   const [error,setError] = useState("");
   const [opNombre,setOpNombre] = useState("");
@@ -372,7 +371,6 @@ Estos términos se rigen por las leyes de la República de Chile, bajo la jurisd
   const bulkApprove = async () => {await updateStatus(selected,"approved");setToast(`✅ ${selected.length} foto(s) aprobadas`);setSelected([]);};
   const bulkReject = async () => {await updateStatus(selected,"rejected");setToast(`❌ ${selected.length} rechazadas`);setSelected([]);};
 
-  // Guardar mensaje personalizado
   const handleSaveMensaje = async () => {
     if(!evento) return;
     const {error:saveError} = await supabase.from("eventos").update({mensaje_subida:editMensaje}).eq("id",evento.id);
@@ -382,13 +380,11 @@ Estos términos se rigen por las leyes de la República de Chile, bajo la jurisd
     onUpdateEvento({...evento, mensaje_subida:editMensaje});
   };
 
-  // Descarga ZIP de fotos aprobadas
   const handleDownload = async () => {
     const approved = fotos.filter(p=>p.status==="approved");
     if(approved.length===0){setToast("No hay fotos aprobadas para descargar");return;}
     setDownloading(true);
     try {
-      // Descargar cada imagen y crear un zip con JSZip
       const JSZip = (await import("https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm")).default;
       const zip = new JSZip();
       for(let i=0;i<approved.length;i++){
@@ -417,7 +413,6 @@ Estos términos se rigen por las leyes de la República de Chile, bajo la jurisd
     if(evento.evento_cerrado){setError("Evento cerrado. Contacta al administrador.");return;}
     if(pass===evento.clave_operador||pass===ADMIN_PASSWORD){
       setError("");
-      // Si es admin, saltar registro y terms
       if(pass===ADMIN_PASSWORD){
         sessionStorage.setItem("op_auth", JSON.stringify({ ts: Date.now(), sv: evento.session_version||1 }));
         setLoggedIn(true);
@@ -429,7 +424,6 @@ Estos términos se rigen por las leyes de la República de Chile, bajo la jurisd
     else setError("Clave incorrecta");
   };
 
-  // Validar RUT chileno: formato XXXXXXXX-X y dígito verificador
   const validarRut = (rut) => {
     const clean = rut.replace(/\./g,"").trim();
     if(!/^\d{7,8}-[\dkK]$/.test(clean)) return {ok:false,msg:"Formato inválido. Usa: 12345678-9 (sin puntos, con guión)"};
@@ -449,7 +443,6 @@ Estos términos se rigen por las leyes de la República de Chile, bajo la jurisd
     if(!opNombre.trim()||!opRut.trim()){setError("Nombre y RUT son obligatorios");return;}
     const rutCheck = validarRut(opRut);
     if(!rutCheck.ok){setError(rutCheck.msg);return;}
-    // Guardar operador en historial
     const {error:regError} = await supabase.from("operadores").insert({
       evento_id:evento.id,
       nombre:opNombre.trim(),
@@ -461,7 +454,6 @@ Estos términos se rigen por las leyes de la República de Chile, bajo la jurisd
     setRegistroStep("panel");
   };
 
-  // Login screen
   if(!loggedIn && registroStep === "login") return (
     <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
       <div style={{width:"100%",maxWidth:360,animation:"fadeInUp 0.4s ease"}}>
@@ -477,7 +469,6 @@ Estos términos se rigen por las leyes de la República de Chile, bajo la jurisd
     </div>
   );
 
-  // Términos del operador
   if(!loggedIn && registroStep === "terms") return (
     <>
       {showOpTerms && (
@@ -514,7 +505,6 @@ Estos términos se rigen por las leyes de la República de Chile, bajo la jurisd
     </>
   );
 
-  // Registro de operador
   if(!loggedIn && registroStep === "registro") return (
     <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
       <div style={{width:"100%",maxWidth:360,animation:"fadeInUp 0.4s ease"}}>
@@ -541,7 +531,6 @@ Estos términos se rigen por las leyes de la República de Chile, bajo la jurisd
     </div>
   );
 
-  // Panel principal
   return (
     <div style={{padding:"16px",maxWidth:900,margin:"0 auto"}}>
       {toast&&<Toast msg={toast} onDone={()=>setToast(null)}/>}
@@ -555,14 +544,12 @@ Estos términos se rigen por las leyes de la República de Chile, bajo la jurisd
         </div>
       </div>
 
-      {/* Stats */}
       <div className="stat-grid" style={{marginBottom:16}}>
         {[["En espera",fotos.filter(p=>p.status==="pending").length,"#ff9900"],["Aprobadas",fotos.filter(p=>p.status==="approved").length,"#00ff88"],["Rechazadas",fotos.filter(p=>p.status==="rejected").length,"#ff3355"]].map(([l,v,c])=>(
           <div key={l} className="stat-card"><div className="stat-val" style={{color:c}}>{v}</div><div className="stat-label">{l}</div></div>
         ))}
       </div>
 
-      {/* Personalizar mensaje */}
       <div className="card" style={{marginBottom:12}}>
         <h3 className="section-title">✏️ Personalizar pantalla</h3>
         <label className="field-label">Mensaje del botón de subida</label>
@@ -573,7 +560,6 @@ Estos términos se rigen por las leyes de la República de Chile, bajo la jurisd
         <div style={{fontSize:11,color:"#5a5f85",marginTop:6}}>Los asistentes verán este mensaje en la pantalla de subida</div>
       </div>
 
-      {/* Descarga (solo si habilitada) */}
       {evento?.descarga_habilitada && (
         <div className="card" style={{marginBottom:12}}>
           <h3 className="section-title">📥 Descargar fotos</h3>
@@ -584,7 +570,6 @@ Estos términos se rigen por las leyes de la República de Chile, bajo la jurisd
         </div>
       )}
 
-      {/* Filtros + fotos */}
       <div className="filter-tabs">
         {["pending","approved","rejected"].map(f=>(
           <button key={f} className={`filter-tab ${filter===f?"active":""}`} onClick={()=>setFilter(f)}>
@@ -706,7 +691,6 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
   const [showHist,setShowHist] = useState(false);
   const [creatingEvento,setCreatingEvento] = useState(false);
 
-  // Sync state si evento cambia
   useEffect(()=>{
     if(!evento) return;
     setEditNombre(evento.nombre||"");
@@ -716,9 +700,12 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
     setEventoCerrado(evento.evento_cerrado||false);
   },[evento]);
 
+  // *** FIX: Traer TODOS los operadores de TODOS los eventos ***
   const fetchOperadores = async () => {
-    if(!evento) return;
-    const {data} = await supabase.from("operadores").select("*").eq("evento_id",evento.id).order("created_at",{ascending:false});
+    const {data} = await supabase
+      .from("operadores")
+      .select("*, eventos(nombre)")
+      .order("created_at",{ascending:false});
     setOperadores(data||[]);
     setSelectedOps([]);
   };
@@ -739,6 +726,7 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
     fetchOperadores();
   };
 
+  // *** FIX: Exportar con nombre real del evento asociado ***
   const exportOperadoresExcel = async () => {
     if(operadores.length===0){setToast("No hay operadores para exportar");return;}
     try {
@@ -748,13 +736,13 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
         RUT: op.rut,
         Fecha: new Date(op.created_at).toLocaleDateString("es-CL",{day:"2-digit",month:"2-digit",year:"numeric"}),
         Hora: new Date(op.created_at).toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit"}),
-        Evento: evento?.nombre || ""
+        Evento: op.eventos?.nombre || "Evento eliminado"
       }));
       const ws = XLSX.utils.json_to_sheet(data);
       ws["!cols"] = [{wch:25},{wch:14},{wch:12},{wch:8},{wch:25}];
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Operadores");
-      XLSX.writeFile(wb, `operadores_${evento?.nombre||"evento"}.xlsx`);
+      XLSX.writeFile(wb, `operadores_todos_los_eventos.xlsx`);
       setToast(`📊 ${operadores.length} registros exportados`);
     } catch(e) {
       setToast("❌ Error al exportar");
@@ -816,17 +804,14 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
     setToast("🗑️ Evento limpiado");onRefreshFotos();
   };
 
-  // CREAR NUEVO EVENTO
   const handleCrearEvento = async () => {
     if(!evento) return;
     if(!evento.evento_cerrado){setToast("⚠️ Cierra el evento actual antes de crear uno nuevo");return;}
     if(!window.confirm("¿Crear un nuevo evento? El evento actual pasará al historial.")) return;
     setCreatingEvento(true);
     try {
-      // 1. Desactivar evento actual (pasa al historial)
       await supabase.from("eventos").update({activo:false}).eq("id",evento.id);
 
-      // 2. Crear nuevo evento
       const nuevaClave = Math.random().toString(36).slice(2,8);
       const {data:nuevoEvento,error:createErr} = await supabase.from("eventos").insert({
         nombre:"TU EVENTO",
@@ -840,7 +825,6 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
 
       if(createErr) throw createErr;
 
-      // 3. Actualizar estado local
       setEditNombre("TU EVENTO");
       setEditClave(nuevaClave);
       setEditMensaje("SUBIR FOTO");
@@ -856,7 +840,6 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
     }
   };
 
-  // DESCARGAR FOTOS DE EVENTO DEL HISTORIAL
   const handleDownloadHistFotos = async (hist) => {
     const {data:fotosHist} = await supabase.from("fotos").select("*").eq("evento_id",hist.id).eq("status","approved");
     if(!fotosHist||fotosHist.length===0){setToast("No hay fotos aprobadas en ese evento");return;}
@@ -883,20 +866,15 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
     }
   };
 
-  // ELIMINAR EVENTO DEL HISTORIAL (con sus fotos)
   const handleDeleteHistEvento = async (hist) => {
     if(!window.confirm(`¿Eliminar "${hist.nombre}" y todas sus fotos permanentemente?`)) return;
-    // Borrar fotos del storage
     const {data:fotosHist} = await supabase.from("fotos").select("url").eq("evento_id",hist.id);
     if(fotosHist){
       const paths = fotosHist.map(f=>f.url.split("/fotos/")[1]).filter(Boolean);
       if(paths.length) await supabase.storage.from("fotos").remove(paths);
     }
-    // Borrar fotos de la DB
     await supabase.from("fotos").delete().eq("evento_id",hist.id);
-    // Borrar operadores del evento
     await supabase.from("operadores").delete().eq("evento_id",hist.id);
-    // Borrar evento
     await supabase.from("eventos").delete().eq("id",hist.id);
     setToast(`🗑️ "${hist.nombre}" eliminado`);
     fetchEventosHistorial();
@@ -916,6 +894,15 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
       </div>
     </div>
   );
+
+  // *** Agrupar operadores por evento para la visualización ***
+  const operadoresPorEvento = operadores.reduce((acc, op) => {
+    const eventoNombre = op.eventos?.nombre || "Evento eliminado";
+    const eventoId = op.evento_id;
+    if (!acc[eventoId]) acc[eventoId] = { nombre: eventoNombre, ops: [] };
+    acc[eventoId].ops.push(op);
+    return acc;
+  }, {});
 
   return (
     <div style={{padding:"16px",maxWidth:640,margin:"0 auto"}}>
@@ -938,7 +925,6 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
           ))}
         </div>
 
-        {/* Botón crear nuevo evento — solo visible cuando evento está cerrado */}
         {eventoCerrado && (
           <button className="btn btn-magenta" style={{width:"100%",marginTop:14}} onClick={handleCrearEvento} disabled={creatingEvento}>
             {creatingEvento?"Creando...":"✨ CREAR NUEVO EVENTO"}
@@ -994,7 +980,7 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
         )}
       </div>
 
-      {/* Historial de operadores */}
+      {/* *** FIX: Historial de operadores — TODOS los eventos, agrupados *** */}
       <div className="card" style={{marginBottom:12}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10,flexWrap:"wrap",gap:8}}>
           <h3 className="section-title" style={{marginBottom:0}}>👤 Historial de operadores</h3>
@@ -1012,25 +998,37 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
                 )}
                 <button className="btn btn-sm btn-success" onClick={exportOperadoresExcel}>📊 Exportar Excel</button>
               </div>
-              <div style={{display:"flex",flexDirection:"column",gap:6}}>
-                {operadores.map(op=>(
-                  <div key={op.id} onClick={()=>toggleSelectOp(op.id)} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 10px",background:selectedOps.includes(op.id)?"#00f5ff10":"#060810",borderRadius:8,border:selectedOps.includes(op.id)?"1px solid #00f5ff55":"1px solid #1a1d35",cursor:"pointer",transition:"all 0.2s"}}>
-                    <div style={{display:"flex",alignItems:"center",gap:10}}>
-                      <div style={{width:20,height:20,borderRadius:4,border:selectedOps.includes(op.id)?"2px solid #00f5ff":"2px solid #333",background:selectedOps.includes(op.id)?"#00f5ff":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                        {selectedOps.includes(op.id)&&<span style={{fontSize:11,color:"#000",fontWeight:700}}>✓</span>}
-                      </div>
-                      <div>
-                        <div style={{fontSize:13,fontWeight:700,color:"#e8eaf6"}}>{op.nombre}</div>
-                        <div style={{fontSize:11,color:"#5a5f85"}}>RUT: {op.rut}</div>
-                      </div>
+              <div style={{fontSize:11,color:"#5a5f85",marginBottom:10}}>{operadores.length} operador(es) en {Object.keys(operadoresPorEvento).length} evento(s)</div>
+              <div style={{display:"flex",flexDirection:"column",gap:14}}>
+                {Object.entries(operadoresPorEvento).map(([eventoId, grupo]) => (
+                  <div key={eventoId}>
+                    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+                      <span style={{fontSize:12,fontFamily:"Cossette Titre",fontWeight:700,color:"#ff00aa",letterSpacing:1}}>{grupo.nombre}</span>
+                      <span style={{fontSize:10,color:"#5a5f85"}}>({grupo.ops.length})</span>
+                      {evento && eventoId === String(evento.id) && <span className="tag" style={{fontSize:"7px"}}>ACTUAL</span>}
                     </div>
-                    <div style={{textAlign:"right"}}>
-                      <div style={{fontSize:10,color:"#5a5f85",fontFamily:"Cossette Titre",letterSpacing:1}}>
-                        {new Date(op.created_at).toLocaleDateString("es-CL",{day:"2-digit",month:"short",year:"numeric"})}
-                      </div>
-                      <div style={{fontSize:9,color:"#444",fontFamily:"Cossette Texte"}}>
-                        {new Date(op.created_at).toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit"})}
-                      </div>
+                    <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                      {grupo.ops.map(op=>(
+                        <div key={op.id} onClick={()=>toggleSelectOp(op.id)} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 10px",background:selectedOps.includes(op.id)?"#00f5ff10":"#060810",borderRadius:8,border:selectedOps.includes(op.id)?"1px solid #00f5ff55":"1px solid #1a1d35",cursor:"pointer",transition:"all 0.2s"}}>
+                          <div style={{display:"flex",alignItems:"center",gap:10}}>
+                            <div style={{width:20,height:20,borderRadius:4,border:selectedOps.includes(op.id)?"2px solid #00f5ff":"2px solid #333",background:selectedOps.includes(op.id)?"#00f5ff":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                              {selectedOps.includes(op.id)&&<span style={{fontSize:11,color:"#000",fontWeight:700}}>✓</span>}
+                            </div>
+                            <div>
+                              <div style={{fontSize:13,fontWeight:700,color:"#e8eaf6"}}>{op.nombre}</div>
+                              <div style={{fontSize:11,color:"#5a5f85"}}>RUT: {op.rut}</div>
+                            </div>
+                          </div>
+                          <div style={{textAlign:"right"}}>
+                            <div style={{fontSize:10,color:"#5a5f85",fontFamily:"Cossette Titre",letterSpacing:1}}>
+                              {new Date(op.created_at).toLocaleDateString("es-CL",{day:"2-digit",month:"short",year:"numeric"})}
+                            </div>
+                            <div style={{fontSize:9,color:"#444",fontFamily:"Cossette Texte"}}>
+                              {new Date(op.created_at).toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit"})}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 ))}
@@ -1105,7 +1103,6 @@ export default function App() {
     setFotos(ft||[]);
   },[]);
 
-  // Wrapper que actualiza evento Y sincroniza eventoIdRef + fotos si cambió el ID
   const handleUpdateEvento = useCallback((newEvento) => {
     setEvento(newEvento);
     if(newEvento && newEvento.id !== eventoIdRef.current) {
