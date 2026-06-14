@@ -625,12 +625,20 @@ Estos términos se rigen por las leyes de la República de Chile, bajo la jurisd
 function ViewPantalla({fotos}) {
   const approved = fotos.filter(p=>p.status==="approved");
 
-  const slides = approved.reduce((acc, foto, i) => {
-    acc.push({ type: "foto", data: foto });
-    if (approved.length >= 6 && (i + 1) % 6 === 0) acc.push({ type: "qr" });
-    return acc;
-  }, []);
-  if (approved.length > 0 && approved.length < 6) slides.push({ type: "qr" });
+  const slides = (() => {
+    if (approved.length === 0) return [{ type: "qr" }];
+    if (approved.length < 6) {
+      return approved.flatMap(foto => [
+        { type: "foto", data: foto },
+        { type: "qr" }
+      ]);
+    }
+    return approved.reduce((acc, foto, i) => {
+      acc.push({ type: "foto", data: foto });
+      if ((i + 1) % 6 === 0) acc.push({ type: "qr" });
+      return acc;
+    }, []);
+  })();
 
   const [current,setCurrent] = useState(0);
 
