@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { QRCodeSVG } from "qrcode.react";
 import { supabase } from "./supabase";
 
 const ADMIN_PASSWORD = "admin9999";
@@ -267,7 +268,6 @@ function ViewAsistente({evento}) {
               <h2 style={{fontFamily:"Cossette Titre",fontWeight:700,fontSize:16,marginTop:6,marginBottom:12,color:"#fff"}}>¿Lista para enviar?</h2>
               <img src={preview} alt="" style={{width:"100%",borderRadius:10,aspectRatio:"4/3",objectFit:"cover",marginBottom:14,border:"1px solid #1a1d35"}} />
 
-              {/* Toggle autorización publicitaria */}
               <div onClick={()=>setAutorizada(!autorizada)} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",marginBottom:12,cursor:"pointer",userSelect:"none"}}>
                 <div style={{width:22,height:22,borderRadius:5,border:autorizada?"2px solid #00f5ff":"2px solid #333",background:autorizada?"#00f5ff":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.2s"}}>
                   {autorizada&&<span style={{fontSize:13,color:"#000",fontWeight:700}}>✓</span>}
@@ -659,9 +659,20 @@ function ViewPantalla({fotos}) {
             <div style={{fontFamily:"Cossette Titre",fontSize:11,letterSpacing:2}}>Esperando fotos aprobadas...</div>
           </div>
         ) : slides[current]?.type==="qr" ? (
-          <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",width:"100%",height:"100%",background:"#060810",gap:20}}>
-            <img src="/nexoled_qr_pix.png" alt="QR" style={{width:"75%",maxWidth:280,borderRadius:16}}/>
-            <div style={{color:"#00f5ff",fontFamily:"Cossette Titre",fontSize:14,letterSpacing:2,textAlign:"center"}}>¡SUBE TU FOTO!</div>
+          <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",width:"100%",height:"100%",background:"#060810",gap:24}}>
+            <div style={{background:"#ffffff",padding:20,borderRadius:20,boxShadow:"0 0 60px #00f5ff44"}}>
+              <QRCodeSVG
+                value="https://pix.nexoled.cl"
+                size={260}
+                bgColor="#ffffff"
+                fgColor="#060810"
+                level="H"
+              />
+            </div>
+            <div style={{textAlign:"center"}}>
+              <div style={{color:"#00f5ff",fontFamily:"Cossette Titre",fontSize:18,letterSpacing:4,marginBottom:8}}>¡SUBE TU FOTO!</div>
+              <div style={{color:"#5a5f85",fontFamily:"Cossette Texte",fontSize:12,letterSpacing:2}}>pix.nexoled.cl</div>
+            </div>
           </div>
         ) : (
           <img key={current} src={slides[current]?.data?.url} alt="" className="slideshow-img"/>
@@ -700,7 +711,6 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
     setEventoCerrado(evento.evento_cerrado||false);
   },[evento]);
 
-  // *** FIX: Traer TODOS los operadores de TODOS los eventos ***
   const fetchOperadores = async () => {
     const {data} = await supabase
       .from("operadores")
@@ -726,7 +736,6 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
     fetchOperadores();
   };
 
-  // *** FIX: Exportar con nombre real del evento asociado ***
   const exportOperadoresExcel = async () => {
     if(operadores.length===0){setToast("No hay operadores para exportar");return;}
     try {
@@ -895,7 +904,6 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
     </div>
   );
 
-  // *** Agrupar operadores por evento para la visualización ***
   const operadoresPorEvento = operadores.reduce((acc, op) => {
     const eventoNombre = op.eventos?.nombre || "Evento eliminado";
     const eventoId = op.evento_id;
@@ -912,7 +920,6 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
         <div style={{marginTop:6}}><Logo size={20}/></div>
       </div>
 
-      {/* Estado del evento */}
       <div className="card" style={{marginBottom:12}}>
         <h3 className="section-title">📡 Estado del evento</h3>
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
@@ -932,7 +939,6 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
         )}
       </div>
 
-      {/* Configuración del evento */}
       <div className="card" style={{marginBottom:12}}>
         <h3 className="section-title">⚙️ Configuración del evento</h3>
         <div style={{display:"flex",flexDirection:"column",gap:10}}>
@@ -953,7 +959,6 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
         </div>
       </div>
 
-      {/* Controles de evento */}
       <div className="card" style={{marginBottom:12}}>
         <h3 className="section-title">🎛️ Controles</h3>
 
@@ -980,7 +985,6 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
         )}
       </div>
 
-      {/* *** FIX: Historial de operadores — TODOS los eventos, agrupados *** */}
       <div className="card" style={{marginBottom:12}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10,flexWrap:"wrap",gap:8}}>
           <h3 className="section-title" style={{marginBottom:0}}>👤 Historial de operadores</h3>
@@ -1038,7 +1042,6 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
         )}
       </div>
 
-      {/* Historial de eventos */}
       <div className="card" style={{marginBottom:12}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10,flexWrap:"wrap",gap:8}}>
           <h3 className="section-title" style={{marginBottom:0}}>📁 Historial de eventos</h3>
@@ -1071,7 +1074,6 @@ function ViewAdmin({evento,fotos,onRefreshFotos,onUpdateEvento}) {
         )}
       </div>
 
-      {/* Acciones peligrosas */}
       <div className="card">
         <h3 className="section-title">🛠️ Acciones</h3>
         <button className="btn btn-danger btn-sm" style={{width:"100%"}} onClick={handleClear}>🗑️ Borrar todas las fotos del evento actual</button>
