@@ -306,18 +306,16 @@ function ViewAsistente({evento}) {
 // =============================================
 function ViewOperador({evento,fotos,onRefreshFotos,onUpdateEvento}) {
   const [loggedIn, setLoggedIn] = useState(() => {
-    const saved = sessionStorage.getItem("op_auth");
+    const saved = localStorage.getItem("op_auth");
     if (!saved) return false;
-    const { ts, sv } = JSON.parse(saved);
-    if (Date.now() - ts > 8 * 60 * 60 * 1000) return false;
+    const { sv } = JSON.parse(saved);
     if (evento && sv !== evento.session_version) return false;
     return true;
   });
   const [registroStep, setRegistroStep] = useState(() => {
-    const saved = sessionStorage.getItem("op_auth");
+    const saved = localStorage.getItem("op_auth");
     if (!saved) return "login";
-    const { ts, sv } = JSON.parse(saved);
-    if (Date.now() - ts > 8 * 60 * 60 * 1000) return "login";
+    const { sv } = JSON.parse(saved);
     if (evento && sv !== evento.session_version) return "login";
     return "panel";
   });
@@ -414,7 +412,7 @@ Estos términos se rigen por las leyes de la República de Chile, bajo la jurisd
     if(pass===evento.clave_operador||pass===ADMIN_PASSWORD){
       setError("");
       if(pass===ADMIN_PASSWORD){
-        sessionStorage.setItem("op_auth", JSON.stringify({ ts: Date.now(), sv: evento.session_version||1 }));
+        localStorage.setItem("op_auth", JSON.stringify({ sv: evento.session_version||1 }));
         setLoggedIn(true);
         setRegistroStep("panel");
       } else {
@@ -449,7 +447,7 @@ Estos términos se rigen por las leyes de la República de Chile, bajo la jurisd
       rut:rutCheck.clean
     });
     if(regError){setError("Error al registrar. Intenta de nuevo.");return;}
-    sessionStorage.setItem("op_auth", JSON.stringify({ ts: Date.now(), sv: evento.session_version||1 }));
+    localStorage.setItem("op_auth", JSON.stringify({ sv: evento.session_version||1 }));
     setLoggedIn(true);
     setRegistroStep("panel");
   };
@@ -540,7 +538,7 @@ Estos términos se rigen por las leyes de la República de Chile, bajo la jurisd
           <span className={`dot ${evento?.evento_cerrado?"dot-closed":"dot-live"}`}></span>
           <span style={{fontSize:11,color:"#5a5f85",fontFamily:"Cossette Texte"}}>{evento?.evento_cerrado?"CERRADO":"EN VIVO"}</span>
           <button className="btn btn-sm btn-outline" onClick={onRefreshFotos} style={{fontWeight:700,fontSize:16,color:"#ffffff"}}>↻</button>
-          <button className="btn btn-sm btn-danger" onClick={()=>{sessionStorage.removeItem("op_auth");setLoggedIn(false);setRegistroStep("login");setPass("");}}>Salir</button>
+          <button className="btn btn-sm btn-danger" onClick={()=>{localStorage.removeItem("op_auth");setLoggedIn(false);setRegistroStep("login");setPass("");}}>Salir</button>
         </div>
       </div>
 
