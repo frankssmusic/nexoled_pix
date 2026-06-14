@@ -661,12 +661,7 @@ function ViewPantalla({fotos}) {
         <span style={{fontSize:10,color:"#333",fontFamily:"Cossette Titre"}}>{approved.length} FOTO{approved.length!==1?"S":""}</span>
       </div>
       <div className="slideshow-body">
-        {approved.length===0?(
-          <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:14,color:"#222"}}>
-            <div style={{fontSize:44}}>📺</div>
-            <div style={{fontFamily:"Cossette Titre",fontSize:11,letterSpacing:2}}>Esperando fotos aprobadas...</div>
-          </div>
-        ) : slides[current]?.type==="qr" ? (
+        {slides[current]?.type==="qr" ? (
           <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",width:"100%",height:"100%",background:"#060810",gap:24}}>
             <div style={{background:"#ffffff",padding:20,borderRadius:20,boxShadow:"0 0 60px #00f5ff44"}}>
               <QRCodeSVG
